@@ -14,35 +14,35 @@ Created on Thu Oct 27 09:42:16 2016
 
 #%%
 # TO DO
-# probably need to redo this whole thing in a way that is more simiar to presentationBG
 
+# make two seperate regions of the thalamus. One will decide an action the other will feed to the cortex. 
 #%%
 
 
 from brian2 import *
 #prefs.codegen.target = 'weave'
 start_scope()
-duration = 1000*ms#1000000*ms
+duration = 1000000*ms
 
 recordz = 0
 plotz = 0
-
+startz = 0
 
 #%%
 # Parameters
 
-n = 20 # number of neurons
+n = 50 # number of neurons
 w2 = n # for connectivity
 
-# RS Iz
+# thalamo-cortical Iz
 c = -66#-66*mV
 b= 0.2#0.2/ms 
 a = 0.02#0.02/ms
 d = 8#8*mV/ms
 
 # cortical
-taum = 5*ms#2*ms#5*ms#10*ms
-taupsp = 0.325*ms#0.325*ms
+taum = 5*ms#10*ms
+taupsp = 0.325*ms
 weight = 4.86*mV
 
 synfire = 1
@@ -53,6 +53,9 @@ DAltpRate = 100 # the factor synapses that got DA and cortical input will be pot
 DAltdRate = 0.6 # factor to decrease D2 activity by
 ltpDecay = 0.995 # amount LTP decreases with each cortical spike
 window = 60*ms # amount of time for DA integration.. from Yagishita et al.,2014; 0.3-2s
+
+# sensory Threshold used for knowing if tone is on
+sensoryThreshold = -30 # taking mean activity at the moment hence the negative
 
 #%% Equations 
 
@@ -74,9 +77,8 @@ dx/dt = ((-x+y/mV)*(1./taupsp)) : 1
 dy/dt = -y*(1./taupsp)+25.27*mV/ms+(39.24*mV/ms**0.5)*xi : volt
 I : 1
 '''
-
 eqs2 = '''
-dv/dt = ((0.04)*v**2+(5)*v+140-u+I)/ms : 1
+dv/dt = ((0.04)*v**2+(5)*v+140-u+I))/ms : 1
 du/dt = a*(b*v-u)/ms : 1
 I : 1
 '''
@@ -103,20 +105,19 @@ group_size = 80 # This will result in 800 neurons which is what Laje and Buonoma
 w3 = n_groups*group_size
 
 # Poisson Input
-P_STN = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
+#P_STN = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
 
 # Actions
-LeverPress = NeuronGroup(2,eqs2,threshold='v>20',reset=reset,method='euler')
-NoLeverPress = NeuronGroup(2,eqs2,threshold='v>20',reset=reset,method='euler')
-WrongLeverPress = NeuronGroup(2,eqs2,threshold='v>20',reset=reset,method='euler')
-InhInter = NeuronGroup(1,eqs2,threshold='v>20',reset=reset,method='euler')
+LeverPress = NeuronGroup(10,eqs,threshold='v>60',reset=reset,method='euler')
+WrongLeverPress = NeuronGroup(10,eqs,threshold='v>60',reset=reset,method='euler')
+NoLeverPress = NeuronGroup(10,eqs,threshold='v>20',reset=reset,method='euler')
 
 Cortex = NeuronGroup(N=n_groups*group_size, model=eqs,
-threshold='v>30', reset=reset, refractory=2*ms,
+threshold='v>30', reset=reset, refractory=1*ms,
 method='euler')
 
 # DA neurons
-DA = NeuronGroup(n,eqs2,threshold='v>30',reset=reset,method='euler')
+DA = NeuronGroup(n,eqs,threshold='v>30',reset=reset,method='euler')
 
 DA.v = c
 DA.u = b*c
@@ -135,31 +136,31 @@ D2.v = c
 D2.u = b*c
 
 #GPe neurons
-GPe=NeuronGroup(n,eqs2,threshold='v>30',reset=reset,method='euler')
+GPe=NeuronGroup(n,eqs,threshold='v>30',reset=reset,method='euler')
 
 GPe.v = c
 GPe.u = b*c
 
 # Hypothalamus
-Hypothalamus=NeuronGroup(n,eqs2,threshold='v>30',reset=reset,method='euler')
+Hypothalamus=NeuronGroup(n,eqs,threshold='v>30',reset=reset,method='euler')
 
 Hypothalamus.v = c
 Hypothalamus.u = b*c
 
 # SNr neurons
-SNr=NeuronGroup(n,eqs2,threshold='v>30', reset=reset,method='euler')
+SNr=NeuronGroup(n,eqs,threshold='v>30', reset=reset,method='euler')
 
 SNr.v = c
 SNr.u = b*c
 
 # STN neurons
-STN=NeuronGroup(n,eqs2,threshold='v>20',reset=reset,method='euler') #ampaEqs,threshold='v>20*mV',reset=reset4,method='euler')
+STN=NeuronGroup(n,eqs,threshold='v>20',reset=reset,method='euler') #ampaEqs,threshold='v>20*mV',reset=reset4,method='euler')
 
 STN.v = c
 STN.u = b*c
 
 # Thalamic neurons
-Thalamus =NeuronGroup(n,eqs2,threshold='v>30',reset=reset,method='euler')
+Thalamus =NeuronGroup(n,eqs,threshold='v>30',reset=reset,method='euler')
 
 Thalamus.v = c
 Thalamus.u = b*c
@@ -172,7 +173,7 @@ taupre = taupost = 20*ms
 wmax = 1 # weights can go from 0 to 1
 Apre = 0.01
 Apost = -Apre*taupre/taupost*1.05
-wScale = 1.5 # amount to scale weights by
+wScale = 1 # amount to scale weights by
 
 # MSN plasticity
 traceTau = traceTauPost = 1200*ms  # this will change integration window
@@ -209,7 +210,7 @@ DAstdp = '''
              dtraceConPost/dt = -traceConPost/traceTauPost : 1 (event-driven)
              '''   
 onpreDA_D1='''
-             v_post *= wmax+w*wScale
+             v_post *= w+wmax
              apre += Apre
              w = clip(w+apost, 0, wmax)
              traceCon += traceConstant
@@ -249,17 +250,9 @@ MSNpost ='''
 
 ################################################################
 # Poisson Input
-P_STN_STN = Synapses(P_STN,STN, on_pre = 'v+=15')
-P_STN_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) 
-P_STN_STN.delay = 10*ms
-
-P_SNr = Synapses(P_STN,SNr,on_pre = 'v+=15')
-P_SNr.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True)
-P_SNr.delay = 5*ms
-
-P_GPe = Synapses(P_STN,GPe,on_pre = 'v+=15')
-P_GPe.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True)
-P_GPe.delay = 5*ms
+#P_STN_STN = Synapses(P_STN,STN, on_pre = 'v+=10')
+#P_STN_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) 
+#P_STN_STN.delay = 10*ms
 
 ################################################################
 # Excitatory Connections
@@ -283,27 +276,27 @@ Cortex_DA.delay = 10*ms
 Cortex_DA.w = rand(len(Cortex_DA.i))
 
 Cortex_LeverPress = Synapses(Cortex,LeverPress,stdp_eqs,on_pre=onpre,on_post=onpost)    
-Cortex_LeverPress.connect(j='k for k in range(i-w3, i+w3) if rand()<0.3', skip_if_invalid=True)  
+Cortex_LeverPress.connect(j='k for k in range(i-w3, i+w3) if rand()<0.2', skip_if_invalid=True)  
 #Cortex_LeverPress.connect(condition='i!=j',p=0.5,skip_if_invalid=True)
-Cortex_LeverPress.delay = 25*ms
+Cortex_LeverPress.delay = 10*ms
 Cortex_LeverPress.w = rand(len(Cortex_LeverPress.i))
 
 Cortex_WrongLeverPress = Synapses(Cortex,WrongLeverPress,stdp_eqs,on_pre=onpre,on_post=onpost)    
-Cortex_WrongLeverPress.connect(j='k for k in range(i-w3, i+w3) if rand()<0.3', skip_if_invalid=True)  
+Cortex_WrongLeverPress.connect(j='k for k in range(i-w3, i+w3) if rand()<0.2', skip_if_invalid=True)  
 #Cortex_LeverPress.connect(condition='i!=j',p=0.5,skip_if_invalid=True)
-Cortex_WrongLeverPress.delay = 25*ms
+Cortex_WrongLeverPress.delay = 10*ms
 Cortex_WrongLeverPress.w = rand(len(Cortex_WrongLeverPress.i))
 
 Cortex_NoLeverPress = Synapses(Cortex,NoLeverPress,stdp_eqs,on_pre=onpre,on_post=onpost) 
 Cortex_NoLeverPress.connect(j='k for k in range(i-w3, i+w3) if rand()<0.3', skip_if_invalid=True)     
 #Cortex_NoLeverPress.connect(condition='i!=j',p=0.5,skip_if_invalid=True)
-Cortex_NoLeverPress.delay = 25*ms
+Cortex_NoLeverPress.delay = 10*ms
 Cortex_NoLeverPress.w = rand(len(Cortex_NoLeverPress.i))
 
 # Hyperdirect pathway
 Cortex_STN = Synapses(Cortex,STN,stdp_eqs,on_pre=onpre,on_post=onpost) 
 Cortex_STN.connect(j='k for k in range(i-w3, i+w3) if rand()<0.5', skip_if_invalid=True)  
-Cortex_STN.delay = 5*ms # tis is in order to make the hyperdirect pathway quicker than the direct pathway
+Cortex_STN.delay = 2.5*ms # From Humphries et al., 2006; hyperdirect pathway quicker than the direct pathway
 Cortex_STN.w = rand(len(Cortex_STN.i))
 
 # Excitatory Hypothalamic projections to DA
@@ -397,6 +390,41 @@ SNr_NoLeverPress.w = rand(len(SNr_NoLeverPress.i))
 ################################################################
 # Collaterals and recurrents
 
+# Action to Action
+# this is building a winner take all circuit
+LeverPress_NoPress = Synapses(LeverPress,NoLeverPress,on_pre='v-=50')
+LeverPress_NoPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
+#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
+LeverPress_NoPress.delay = 2*ms
+
+LeverPress_WrongPress = Synapses(LeverPress,WrongLeverPress,on_pre='v-=50')
+LeverPress_WrongPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
+#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
+LeverPress_WrongPress.delay = 2*ms
+
+# this is building a winner take all circuit
+WrongPress_NoPress = Synapses(WrongLeverPress,NoLeverPress,on_pre='v-=50')
+WrongPress_NoPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
+#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
+WrongPress_NoPress.delay = 2*ms
+
+WrongPress_Press = Synapses(WrongLeverPress,LeverPress,on_pre='v-=50')
+WrongPress_Press.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
+#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
+WrongPress_Press.delay = 2*ms
+
+NoPress_Press = Synapses(NoLeverPress,LeverPress,on_pre='v-=100')
+NoPress_Press.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
+#NoPress_Press.connect(condition='i!=j',p=1,skip_if_invalid=True)
+NoPress_Press.delay = 2*ms
+#NoPress_Press.w = rand(len(NoPress_Press.i))
+
+NoPress_WrongPress = Synapses(NoLeverPress,WrongLeverPress,on_pre='v-=100')
+NoPress_WrongPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
+#NoPress_Press.connect(condition='i!=j',p=1,skip_if_invalid=True)
+NoPress_WrongPress.delay = 2*ms
+#NoPress_Press.w = rand(len(NoPress_Press.i))
+
 # Inhibitory SNr collaterals 
 S_SNr_SNr = Synapses(SNr,SNr,stdp_eqs,on_pre=onpreNeg,on_post=onpost)
 S_SNr_SNr.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) 
@@ -446,84 +474,6 @@ DA_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=T
 DA_D2.delay = 5*ms
 DA_D2.w = rand(len(DA_D2))
 
-#################################################################
-# WTA circuit
-# this is building a winner take all circuit
-LeverPress_NoPressEx = Synapses(LeverPress,NoLeverPress,on_pre='v+=5') # excitatory with lower delays 
-LeverPress_NoPressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_NoPressEx.delay = 2*ms
-
-LeverPress_WrongPressEx = Synapses(LeverPress,WrongLeverPress,on_pre='v+=5')
-LeverPress_WrongPressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_WrongPressEx.delay = 2*ms
-
-LeverPress_PressEx = Synapses(LeverPress,LeverPress,on_pre='v+=5') # excitatory with lower delays 
-LeverPress_PressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_PressEx.delay = 2*ms
-
-LeverPress_Inh = Synapses(LeverPress,InhInter,on_pre='v+=5')
-LeverPress_Inh.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_Inh.delay = 2*ms
-
-
-# Wrong lever Press
-WrongPress_NoPressEx = Synapses(WrongLeverPress,NoLeverPress,on_pre='v+=5')
-WrongPress_NoPressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_NoPressEx.delay = 2*ms
-
-WrongPress_PressEx = Synapses(WrongLeverPress,LeverPress,on_pre='v+=5')
-WrongPress_PressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_PressEx.delay = 2*ms
-
-WrongPress_WrongPressEx = Synapses(WrongLeverPress,WrongLeverPress,on_pre='v+=5')
-WrongPress_WrongPressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_WrongPressEx.delay = 2*ms
-
-WrongPress_Inh = Synapses(WrongLeverPress,InhInter,on_pre='v+=5')
-WrongPress_Inh.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#LeverPress_NoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_Inh.delay = 2*ms
-
-# No Lever Press 
-NoPress_PressEx = Synapses(NoLeverPress,LeverPress,on_pre='v+=5')
-NoPress_PressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#NoPress_Press.connect(condition='i!=j',p=1,skip_if_invalid=True)
-NoPress_PressEx.delay = 2*ms
-
-NoPress_WrongPressEx = Synapses(NoLeverPress,WrongLeverPress,on_pre='v+=5')
-NoPress_WrongPressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#NoPress_Press.connect(condition='i!=j',p=1,skip_if_invalid=True)
-NoPress_WrongPressEx.delay = 2*ms
-
-NoPress_NoPressEx = Synapses(NoLeverPress,NoLeverPress,on_pre='v+=5')
-NoPress_NoPressEx.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-#NoPress_Press.connect(condition='i!=j',p=1,skip_if_invalid=True)
-NoPress_NoPressEx.delay = 2*ms
-
-NoPress_Inh = Synapses(NoLeverPress,InhInter,on_pre='v+=5')
-NoPress_Inh.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-NoPress_Inh.delay = 2*ms
-
-
-# Inhibitory Interneuron
-InhPress = Synapses(InhInter,LeverPress,on_pre='v=-6')
-InhPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-InhPress.delay = 2*ms
-
-InhWrongPress = Synapses(InhInter,WrongLeverPress,on_pre='v=-6')
-InhWrongPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-InhWrongPress.delay = 2*ms
-
-InhNoPress = Synapses(InhInter,NoLeverPress,on_pre='v=-6')
-InhNoPress.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-InhNoPress.delay = 2*ms
 #%% Network Operators
 
  #######3
@@ -567,36 +517,34 @@ InhNoPress.delay = 2*ms
 
 @network_operation(dt=10*ms)
 def DA_LTD():
-    indz = np.where(DAspikes.t > (defaultclock.t - 10*ms)) #Cortex_D2_DAtrace.t > defaultclock.t-10*ms)
-    if len(indz[0]) > 2:
+    indz = np.where(DA_D1.t > (defaultclock.t - 10*ms)) #Cortex_D2_DAtrace.t > defaultclock.t-10*ms)
+    if len(indz) > 2:
        Cortex_D2.w =- Cortex_D2.traceCon * DA_D2.traceCon
        #Cortex_D2_DAtrace = 0 # resetting variables to save memroy
 
 @network_operation(dt=10*ms)
 def DA_LTP():
-    indz = np.where(DAspikes.t > (defaultclock.t - 10*ms)) #Cortex_D1_DAtrace.t > defaultclock.t-10*ms)
-    if len(indz[0]) > 2:
+    indz = np.where(DA_D2.t > (defaultclock.t - 10*ms)) #Cortex_D1_DAtrace.t > defaultclock.t-10*ms)
+    if len(indz) > 2:
        Cortex_D1.w =+ Cortex_D1.traceCon * DA_D1.traceCon
        #Cortex_D1_DAtrace  # resetting variables to save memory
     
-@network_operation(dt=50*ms) # here the reward rule will be give reward if lever press occurs druing tone
+@network_operation(dt=10*ms) # here the reward rule will be give reward if lever press occurs druing tone
 def DA_Reward():
-    #if mean(Thalamus.I) > 0: 
-    actionSelection = np.array([len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-50*ms]),len(NoActionSpikes.t[NoActionSpikes.t > defaultclock.t-50*ms]),len(WrongActionSpikes.t[WrongActionSpikes.t > defaultclock.t-50*ms])])      
-    #print actionSelection
-    if np.where(actionSelection == np.max(actionSelection))<1:
-       Hypothalamus.I   -= 0.1 #0.01*(len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-10*ms])) #decrease motivation
-       DA.v += 2 #len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-10*ms]) # increase reward
-
-@network_operation(dt=500*ms) # update the sensory input every 100ms
+    if mean(Thalamus.v) > sensoryThreshold:
+       Hypothalamus.I   -= 0.05*(len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-10*ms])) #decrease motivation
+       DA.v += len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-10*ms]) # increase reward
+        #LeverPress_Hypo = Synapses(LeverPress, Hypothalamus,on_pre='v-=10')
+        #LeverPress_Hypo.connect(condition='i!=j',p=1)
+        #LeverPress_Hypo.delay=100*ms
+       
+@network_operation(dt=500*ms) # update the sensory input every 500ms
 def sensInput():
     if Thalamus.I[0] > 0:
        Thalamus.I[:] = 0
     else: 
-        Thalamus.I[:] = 10
+        Thalamus.I[:] = 100
     #Thalamus.I = 100*(sin(defaultclock.t/ms)+0.5)     
-
-
 
 #@network_operation(dt=100*ms)
 #def recordStartWeights():
@@ -610,9 +558,7 @@ def sensInput():
 #%% Record the spikes
 
 ActionSpikes = SpikeMonitor(LeverPress)
-NoActionSpikes = SpikeMonitor(NoLeverPress)
-WrongActionSpikes = SpikeMonitor(WrongLeverPress)
-DAspikes = SpikeMonitor(DA)
+#NoActionSpikes = SpikeMonitor(NoLeverPress)
 
 # population activity
 ActionPop = PopulationRateMonitor(LeverPress)
@@ -636,7 +582,6 @@ from matplotlib.pyplot import pcolormesh
 if recordz == 1:    
     ActionTrace = StateMonitor(LeverPress,('v'),record=True)  
     NoActionTrace = StateMonitor(NoLeverPress,('v'),record=True)
-    WrongActionTrace = StateMonitor(WrongLeverPress,('v'),record=True)
     
     cortexSpikes = SpikeMonitor(Cortex)
     cortexTrace = StateMonitor(Cortex, 'v', record=True)
@@ -687,7 +632,7 @@ if recordz == 1:
     
 #%%
 # run 
-Hypothalamus.I = 20 # motivation
+Hypothalamus.I = 100 # motivation
 Thalamus.I = 0 #sensory stimulus
 run(duration, report='text')
 #Thalamus.I = 100*(sin(defaultclock.t/ms)+0.5) # sensory stimulus
@@ -810,7 +755,6 @@ if recordz == 1:
     figure()
     plot(ActionTrace.t/ms,ActionTrace.v[0])
     plot(NoActionTrace.t/ms,NoActionTrace.v[0])
-    plot(WrongActionTrace.t/ms,WrongActionTrace.v[0])
     xlabel('Time(ms)')
     ylabel('Voltage(mV)')
     title('Brainstem Voltage')

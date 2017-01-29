@@ -22,6 +22,7 @@ Created on Fri Sep 23 09:54:54 2016
 
 # Iz neuron network
 from brian2 import *
+import math
 start_scope()
 
 #%%
@@ -36,11 +37,6 @@ ltpDecay = 0.995 # amount LTP decreases with each cortical spike
 window = 60*ms # amount of time for DA integration.. from Yagishita et al.,2014; 0.3-2s
 feedbackConstant = 200 # constant for determining reduction of error signal
 
-# Synfire chains 
-taum = 10*ms
-taupsp = 0.325*ms
-weight = 0*mV#4.86*mV
-
 
 # IZ neurons
 n = 100;
@@ -51,16 +47,10 @@ neuronType2 = 'rs' # will change to msn when I get a chance to update equations
 neuronType3 = 'rs' # this will be for most regular neurons 
 
 # thalamo-cortical Iz
-c = -66*mV#
+c = -66*mV
 b= 0.2/ms
 a = 0.02/ms
 d = 8*mV/ms
-# dimensionsless t-c Iz
-#c = -66
-#b= 0.2
-#a = 0.02
-#d = 8
-
 
 # medium spiny neurons... need to adjust equations as well    
 msn_c = -66*mV#-55*mV
@@ -96,7 +86,7 @@ d5 = 8
 
 eqs =  '''
 dv/dt = (0.04/ms/mV)*v**2+(5/ms)*v+140*mV/ms-u+I/nF : volt
-du/dt = msn_a*(msn_b*v-u) : volt/second
+du/dt = a*(b*v-u) : volt/second
 I : amp
 x : metre
 y : metre
@@ -117,6 +107,13 @@ x : metre
 #I : amp
 #x : metre
 #'''
+
+#MSNeqs = '''
+#dv/dt = (((v+80)*(v+25)-u+I)/ms)/50 : 1
+#du/dt = 0.01*(-20*(v+150))/ms : 1
+#I : 1
+#'''
+
 
 #dv/dt = (v+80*mV)*(v+25*mV)/mV/ms-u+I/nF : volt
 
@@ -146,18 +143,6 @@ x : metre
 #Tr_pre=.25*(tanh((t/ms-tspike/ms)/.005)-tanh((t/ms-(tspike/ms +transwdth/ms))/.005)) : 1
 #spike : second
 #''' 
-
-synfireEqs = '''
-dv/dt = ((((0.04)*v**2+(5)*v+140-u+I)+x2)*((1./taum)*ms))/ms : 1
-du/dt = a5*(b5*v-u)/ms : 1
-dx2/dt = ((-x2+y2/mV)*(1./taupsp)) : 1
-dy2/dt = -y2*(1./taupsp)+25.27*mV/ms+(39.24*mV/ms**0.5)*xi : volt
-I : 1
-x : metre
-y : metre
-area : 1
-previous_v : volt
-'''
    
 if neuronType2 == 'msn':
     eqs2 = '''
@@ -183,11 +168,6 @@ u +=d3
 reset4='''
 v=c4
 u+=d4
-'''
-
-synfireReset='''
-v=c5
-u+=d5
 '''
 
 #resetAmpa='''
@@ -223,13 +203,11 @@ ActionSelection.u = b4*c4
 ActionSelection.x = 'i*neuron_spacing5'
 
 # thalamo-cortical cells
-n_groups = 10
-group_size = 100
-Cortex=NeuronGroup(N=n_groups*group_size, model=synfireEqs,threshold='v > 30',
-                    reset=synfireReset, 
+Cortex=NeuronGroup(n, eqs,threshold='v > 30*mV',
+                    reset=reset, 
                     method='euler')
-Cortex.v = c5
-Cortex.u = b5*c5
+Cortex.v = c
+Cortex.u = b*c
 Cortex.x = 'i*neuron_spacing1'
 Cortex.y = 'i*neuron_spacing1'
 Cortex.area = 100 # um, aribtrary
@@ -305,7 +283,7 @@ Thalamus.x = 'i*neuron_spacing4'
 
 
 # poisson groups
-#P = PoissonGroup(n, np.arange(100)*Hz + 10*Hz) # input to cortical neurons
+P = PoissonGroup(n, np.arange(100)*Hz + 10*Hz) # input to cortical neurons
 P2 = PoissonGroup(n,np.arange(100)*Hz + 10*Hz) # input to STN neurons
 P3 = PoissonGroup(n,np.arange(100)*Hz + 10*Hz) # input to thalamic neurons
 P4 = PoissonGroup(n,np.arange(100)*Hz + 10*Hz) # input to SNr 
@@ -316,9 +294,9 @@ P5 = PoissonGroup(n,np.arange(100)*Hz + 10*Hz) # input to GPe
 #times = array([1, 2, 3])*ms
 #inp = SpikeGeneratorGroup(3, indices, times)
 
-#indices = array(range(0,n))
-#times = array(range(1,n+1))*ms
-#inp = SpikeGeneratorGroup(n, indices, times)
+indices = array(range(0,n))
+times = array(range(1,n+1))*ms
+inp = SpikeGeneratorGroup(n, indices, times)
 
 
 #%%
@@ -331,6 +309,16 @@ taupre = taupost = 20*ms
 wmax = 1 # weights can go from 0 to 1
 Apre = 0.01
 Apost = -Apre*taupre/taupost*1.05
+
+# alpha variables
+vt = 1.*mV         # Spiking threshold
+memc = 200.0*pfarad  # Membrane capacitance
+bgcurrent = 200*pA   # External current
+tau_m=6*ms
+tau_ampa=8*ms
+g_synpk=.01*nsiemens
+transwdth=1.0*ms
+
 
 # STDP eqs
 stdp_eqs = '''
@@ -366,9 +354,9 @@ onpostDA='''
 distWeights = '(exp(-(x_pre-x_post)**2/(2*width**2)))'
 
 # Poisson input to cortex
-#S2 = Synapses(P, Cortex, on_pre='v+=1')
-#S2.connect(condition='i!=j',p=0.2)
-#S2.delay = 2*ms
+S2 = Synapses(P, Cortex, on_pre='v+=10*mV')
+S2.connect(condition='i!=j',p=0.2)
+S2.delay = 2*ms
 
 # Poisson input to STN; excitatory
 S5 = Synapses(P2,STN,on_pre='v+=5*mV')
@@ -392,8 +380,8 @@ P_GPe.delay = 2*ms
 
 ##############################################################################
 # Spike generators
-#feedforward_Cortex = Synapses(inp, Cortex,on_pre='v+=1.75')
-#feedforward_Cortex.connect(j='i')
+feedforward_Cortex = Synapses(inp, Cortex,on_pre='v+=1.75*mV')
+feedforward_Cortex.connect(j='i')
 
 ##############################################################################
 # excitatory
@@ -440,7 +428,7 @@ STN_SNr.delay = 1.5*ms
 STN_SNr.w = distWeights # input varies with distance
 
 # Thalamic input to cortex; excitatory 
-Thal_Cortex = Synapses(Thalamus,Cortex,'w:1',on_pre='y2+=weight')
+Thal_Cortex = Synapses(Thalamus,Cortex,stdp_eqs,on_pre=onpre,on_post=onpost)
 Thal_Cortex.connect(condition='i!=j',p=0.2)
 Thal_Cortex.delay = 2*ms
 Thal_Cortex.w = distWeights
@@ -528,15 +516,9 @@ D2_D2.connect(condition='i!=j',p=0.1)
 D2_D2.delay = 1*ms
 
 # Recurrent cortical connections 
-#Cortex_Cortex = Synapses(Cortex,Cortex,stdp_eqs, on_pre=onpre,on_post=onpost)
-#Cortex_Cortex.connect(condition='i!=j',p=0.1) # probability used in Laje & Buonomano, 2013
-#Cortex_Cortex.delay = 1*ms
-
-# Synfire cortical connections
-Cortex_cortex = Synapses(Cortex,Cortex,on_pre='y2+=weight')
-Cortex_cortex.connect(j='k for k in range((int(i/group_size)+1)*group_size, (int(i/group_size)+2)*group_size) '
-'if i<N_pre-group_size')
-
+Cortex_Cortex = Synapses(Cortex,Cortex,stdp_eqs, on_pre=onpre,on_post=onpost)
+Cortex_Cortex.connect(condition='i!=j',p=0.1) # probability used in Laje & Buonomano, 2013
+Cortex_Cortex.delay = 1*ms
 
 
 #%%
@@ -544,26 +526,26 @@ Cortex_cortex.connect(j='k for k in range((int(i/group_size)+1)*group_size, (int
 ############ LFP recorder ##########################################
 ####################################################################
 
-#Cortex.run_regularly('previous_v = v', when='start')
+Cortex.run_regularly('previous_v = v', when='start')
 
 
-#Ne = 5 # Number of electrodes
-#sigma = 0.3 # Resistivity of extracellular field (0.3-0.4 S/m)
-#lfp = NeuronGroup(Ne,model='''v : volt
-#                              x : meter
-#                              y : meter
-#                              z : meter''')
-#lfp.x = 7*mm 
-#lfp.y = [1*mm, 2*mm, 4*mm, 8*mm, 16*mm]
-## Synapses are normally executed after state update, so v-previous_v = dv
-#LFPsynapses = Synapses(Cortex,lfp,model='''w : 1 #ohm*meter**2 (constant) # Weight in the LFP calculation
-#                                 v_post = w*((1*metre-i*neuron_spacing1)*(v_pre-previous_v_pre)/dt) : volt (summed)''')
-#LFPsynapses.connect(condition='i!=j',p=1)
-#    # not quite area
-#LFPsynapses.w = 'area_pre/(4*pi*sigma)/(((x_pre-x_post)/metre)**2+((y_pre-y_post)/metre)**2)' #(4*pi*sigma)
-#LFPsynapses.summed_updaters['v_post'].when = 'after_groups'  # otherwise v and previous_v would be identical
-#
-#Mlfp = StateMonitor(lfp,'v',record=True)
+Ne = 5 # Number of electrodes
+sigma = 0.3 # Resistivity of extracellular field (0.3-0.4 S/m)
+lfp = NeuronGroup(Ne,model='''v : volt
+                              x : meter
+                              y : meter
+                              z : meter''')
+lfp.x = 7*mm 
+lfp.y = [1*mm, 2*mm, 4*mm, 8*mm, 16*mm]
+# Synapses are normally executed after state update, so v-previous_v = dv
+LFPsynapses = Synapses(Cortex,lfp,model='''w : 1 #ohm*meter**2 (constant) # Weight in the LFP calculation
+                                 v_post = w*((1*metre-i*neuron_spacing1)*(v_pre-previous_v_pre)/dt) : volt (summed)''')
+LFPsynapses.connect(condition='i!=j',p=1)
+    # not quite area
+LFPsynapses.w = 'area_pre/(4*pi*sigma)/(((x_pre-x_post)/metre)**2+((y_pre-y_post)/metre)**2)' #(4*pi*sigma)
+LFPsynapses.summed_updaters['v_post'].when = 'after_groups'  # otherwise v and previous_v would be identical
+
+Mlfp = StateMonitor(lfp,'v',record=True)
 
 
 #%%
@@ -674,18 +656,18 @@ Hypothalamus.I = 100*nA # motivation input
 Thalamus.I = 50*nA#'12*nA + 12*i/n*nA' # some salient sensory input
 #inp.set_spikes(cortexSpikes.i, cortexSpikes.t + runtime) # feed previous output of Cortex as input to group
 run(duration, report='text')
-#Hypothalamus.I = 100*nA # motivation input
-#Thalamus.I = 0*nA#'12*nA + 12*i/n*nA' # some salient sensory input
+Hypothalamus.I = 100*nA # motivation input
+Thalamus.I = 0*nA#'12*nA + 12*i/n*nA' # some salient sensory input
 #inp.set_spikes(cortexSpikes.i, cortexSpikes.t + runtime) # feed previous output of Cortex as input to group
-#run(duration, report='text')
-#Hypothalamus.I = 100*nA # motivation input
-#Thalamus.I = 50*nA#'12*nA + 12*i/n*nA' # some salient sensory input
+run(duration, report='text')
+Hypothalamus.I = 100*nA # motivation input
+Thalamus.I = 50*nA#'12*nA + 12*i/n*nA' # some salient sensory input
 #inp.set_spikes(cortexSpikes.i, cortexSpikes.t + runtime) # feed previous output of Cortex as input to group
-#run(duration, report='text')
-#Hypothalamus.I = 100*nA # motivation input
-#Thalamus.I = 0*nA#'12*nA + 12*i/n*nA' # some salient sensory input
+run(duration, report='text')
+Hypothalamus.I = 100*nA # motivation input
+Thalamus.I = 0*nA#'12*nA + 12*i/n*nA' # some salient sensory input
 #inp.set_spikes(cortexSpikes.i, cortexSpikes.t + runtime) # feed previous output of Cortex as input to group
-#run(duration, report='text')
+run(duration, report='text')
 
 
 #%%
@@ -693,7 +675,7 @@ run(duration, report='text')
 ############ plotting ##############################################
 ####################################################################
 figure(1)
-plot(cortexTrace.t/ms,cortexTrace.v[1]/mV)
+plot(cortexTrace.t/ms,cortexTrace.v[0]/mV)
 xlabel('Time(ms)')
 ylabel('Voltage(mV)')
 title('Cortical Voltage')
@@ -753,29 +735,20 @@ ylabel('Weights')
 title('Cortical D1 type weight')
 
 figure(11)
-plot(Cortex_D1mon.t/ms, Cortex_D2mon.w[0])
+plot(Cortex_D2mon.t/ms, Cortex_D2mon.w[0])
 xlabel('Time(ms)')
 ylabel('Weights')
 title('Cortical D2 type weight')
 
 figure(12)
-plot(cortexSpikes.t/ms, 1.0*cortexSpikes.i/group_size, '.')
-plot([0, duration/ms], np.arange(n_groups).repeat(2).reshape(-1, 2).T, 'k-')
-ylabel('group number')
-yticks(np.arange(n_groups))
-xlabel('time (ms)')
+subplot(211)
+for i in range(10):
+    plot(cortexTrace.t/ms,cortexTrace[i].v/mV)
+ylabel('$V_m$ (mV)')
+subplot(212)
+for i in range(5):
+    plot(cortexTrace.t/ms,Mlfp.v[i]/mV)
+ylabel('LFP (mV)')
+xlabel('Time (ms)')
 show()
-
-
-#figure(12)
-#subplot(211)
-#for i in range(10):
-#    plot(cortexTrace.t/ms,cortexTrace[i].v/mV)
-#ylabel('$V_m$ (mV)')
-#subplot(212)
-#for i in range(5):
-#    plot(cortexTrace.t/ms,Mlfp.v[i]/mV)
-#ylabel('LFP (mV)')
-#xlabel('Time (ms)')
-#show()
 

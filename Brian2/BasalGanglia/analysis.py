@@ -3,7 +3,8 @@
 Created on Mon Dec 05 10:49:20 2016
 
 @author: Elijah
-"""import numpy as np
+"""
+import numpy as np
 
 ## BG analysis
 
@@ -48,37 +49,37 @@ plot(IntActionT,IntAction)
 ylim(0,50)
 xlabel('Time(ms)')
 ylabel('Rate(Hz)')
-title('Initial Lever Press Activity')
+title('Initial Action #1 Activity')
 subplot(424)
 plot(EndActionT,EndAction)
 ylim(0,50)
 xlabel('Time(ms)')
 ylabel('Rate(Hz)')
-title('Ending Lever Press Activity')
+title('Ending Action #1 Activity')
 subplot(425)
 plot(IntNoActT,IntNoAct)
 ylim(0,50)
 xlabel('Time(ms)')
 ylabel('Rate(Hz)')
-title('Initial No Lever Press Activity')
+title('Initial Action #2 Activity')
 subplot(426)
 plot(EndNoActT,EndNoAct)
 ylim(0,50)
 xlabel('Time(ms)')
 ylabel('Rate(Hz)')
-title('Ending No Press Activity')
+title('Ending Action #2 Activity')
 subplot(427)
 plot(IntWrongActT,IntWrongAct)
 ylim(0,50)
 xlabel('Time(ms)')
 ylabel('Rate(Hz)')
-title('Initial Wrong Lever Press Activity')
+title('Initial Action #3 Activity')
 subplot(428)
 plot(EndWrongActT,EndWrongAct)
 ylim(0,50)
 xlabel('Time(ms)')
 ylabel('Rate(Hz)')
-title('Ending Wrong Press Activity')
+title('Ending Action #3 Activity')
 
 # Calcukate continuous correlation
 
