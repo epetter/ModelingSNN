@@ -24,7 +24,7 @@ import scipy as sp
 import scipy.stats
 #prefs.codegen.target = 'weave'
 start_scope()
-duration =10000*ms #50000*ms#1000000*ms
+duration =1000*ms #50000*ms#1000000*ms
 
 recordz = 0
 plotz = 0
@@ -403,64 +403,64 @@ InhWLNoPress.delay = 1*ms
 
 ############ Cortical Projections 
 # Cortex WTA
-CortexL_Lever = Synapses(CortexL,LeverPress,on_pre='v+=25')
+CortexL_Lever = Synapses(CortexL,LeverPress,on_pre='v+=10')
 CortexL_Lever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #i=[0,1,2],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
 CortexL_Lever.delay = 15*ms
 
-CortexNL_NoLever = Synapses(CortexNL,NoLeverPress,on_pre='v+=25')
+CortexNL_NoLever = Synapses(CortexNL,NoLeverPress,on_pre='v+=10')
 CortexNL_NoLever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #(i=[3,4,5],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
 CortexNL_NoLever.delay = 15*ms
 
-CortexWL_WrongLever = Synapses(CortexWL,WrongLeverPress,on_pre='v+=25')
+CortexWL_WrongLever = Synapses(CortexWL,WrongLeverPress,on_pre='v+=10')
 CortexWL_WrongLever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #i=[6,7,8],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
 CortexWL_WrongLever.delay = 15*ms
 
 # Cortex D1
 CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
-CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
+CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
-CortexLD1start = 100#s#*rand(len(CortexL_D1L.i))
+CortexLD1start = s#*rand(len(CortexL_D1L.i))
 CortexL_D1L.w = CortexLD1start #rand(len(Cortex_D1.i))
 
 CortexNL_D1NL = Synapses(CortexNL,D1_NL,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
-CortexNL_D1NL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
+CortexNL_D1NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexNL_D1NL.delay = 10*ms # Humphries, et al., 2006 
 CortexNL_D1NL.w = s#s*rand(len(CortexNL_D1NL.i))
 
 CortexWL_D1WL = Synapses(CortexWL,D1_WL,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
-CortexWL_D1WL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
+CortexWL_D1WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexWL_D1WL.delay = 10*ms # Humphries, et al., 2006 
 CortexWL_D1WL.w = s#s*rand(len(CortexWL_D1WL.i))
 
 # Cortex D2 
 CortexL_D2 = Synapses(CortexL,D2_L,weightEqs,on_pre=addW) #on_pre='v=+10')
-CortexL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
+CortexL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
 CortexL_D2.delay = 10*ms # Humphries, et al., 2006 
 CortexL_D2.w = s
 
 CortexNL_D2 = Synapses(CortexNL,D2_NL,weightEqs,on_pre=addW) #on_pre='v=+10')
-CortexNL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
+CortexNL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
 CortexNL_D2.delay = 10*ms # Humphries, et al., 2006 
 CortexNL_D2.w = s
 
 CortexWL_D2 = Synapses(CortexWL,D2_WL,weightEqs,on_pre=addW) #on_pre='v=+10')
-CortexWL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
+CortexWL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
 CortexWL_D2.delay = 10*ms # Humphries, et al., 2006 
 CortexWL_D2.w = s
 
 # Cortex STN - Hyperdirect pathway 
 CortexL_STN = Synapses(CortexL,STN,weightEqs,on_pre=addW)
-CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
 CortexL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexL_STN.w = d #d was suggested by humphries, but not enough activation 
 
 CortexNL_STN = Synapses(CortexNL,STN,weightEqs,on_pre=addW)
-CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
 CortexNL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexNL_STN.w = d
 
 CortexWL_STN = Synapses(CortexWL,STN,weightEqs,on_pre=addW)
-CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
 CortexWL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexWL_STN.w = d
 
@@ -574,20 +574,20 @@ GPe_WL_STN.w = np.random.choice([s,p,d],len(GPe_WL_STN.i),p=[0.3,0.4,0.3]) # Hum
 
 ############ Poisson Projections 
 # Poisson Cortex... introduce some noise into the whole system 
-#P_CortexL = Synapses(CortexPoisson,CortexL,weightEqs,on_pre=addW)
-#P_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-#P_CortexL.delay = 5*ms
-#P_CortexL.w = 5
+P_CortexL = Synapses(CortexPoisson,CortexL,weightEqs,on_pre=addW)
+P_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+P_CortexL.delay = 5*ms
+P_CortexL.w = 5
 
-#P_CortexNL = Synapses(CortexPoisson,CortexNL,weightEqs,on_pre=addW)
-#P_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-#P_CortexNL.delay = 5*ms
-#P_CortexNL.w = 5
+P_CortexNL = Synapses(CortexPoisson,CortexNL,weightEqs,on_pre=addW)
+P_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+P_CortexNL.delay = 5*ms
+P_CortexNL.w = 5
 
-#P_CortexWL = Synapses(CortexPoisson,CortexWL,weightEqs,on_pre=addW)
-#P_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-#P_CortexWL.delay = 5*ms
-#P_CortexWL.w = 5
+P_CortexWL = Synapses(CortexPoisson,CortexWL,weightEqs,on_pre=addW)
+P_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+P_CortexWL.delay = 5*ms
+P_CortexWL.w = 5
 
 ############ SNr Projections 
 # Action
@@ -731,6 +731,7 @@ CortexWLspikes = SpikeMonitor(CortexWL)
 DASpikes = SpikeMonitor(DA)
 D2spikes = SpikeMonitor(D2_L)
 D1spikes = SpikeMonitor(D1_L)
+D1_NLspikes = SpikeMonitor(D1_NL)
 D1nlSpikes = SpikeMonitor(D1_NL)
 #GPeTrace = StateMonitor(GPe,('v'),record=True)
 
@@ -772,16 +773,16 @@ if recordz == 1:
            #Cortex_D1.w[indz[0]] += 1
           #print 'learn'
 
-@network_operation(dt=500*ms) # update the sensory input every 100ms
-def sensInput():
-    if ThalamusL.I[0] > 0: # if one is above zero all should be above zero 
-       ThalamusL.I[:] = 0
-       ThalamusNL.I[:] = 0
-       ThalamusWL.I[:] = 0
-    else: 
-        ThalamusL.I[:] = 5
-        ThalamusNL.I[:] = 5
-        ThalamusWL.I[:] = 5
+#@network_operation(dt=500*ms) # update the sensory input every 100ms
+#def sensInput():
+#    if ThalamusL.I[0] > 0: # if one is above zero all should be above zero 
+#       ThalamusL.I[:] = 0
+#       ThalamusNL.I[:] = 0
+#       ThalamusWL.I[:] = 0
+#    else: 
+#        ThalamusL.I[:] = 5
+#        ThalamusNL.I[:] = 5
+#        ThalamusWL.I[:] = 5
 
 rewWin=150*ms        
 @network_operation(dt=rewWin)
@@ -875,30 +876,27 @@ def calculate_FR(SpikeMon,binSize=100*ms,timeWin=duration):
     FR = np.mean(allBin)
     return FR, allBin       
        
-sequence = 0
-if sequence == 1:  # reproduce figure 3 in humphries et al., 2006      
+sequence = 1
+if sequence == 1:  # reproduce figure 3 in humphries et al., 2006        
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
     DA.I = 0
     CortexL.I = 0
-    InhInter.I = 5
     run(duration,report='text')
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
     DA.I = 0
-    CortexL.I = 50
+    CortexL.I = 10
     CortexNL.I = 0
-    InhInter.I = 5
     run(duration,report='text')
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
     DA.I = 0
-    CortexL.I = 50
-    CortexNL.I = 60
-    InhInter.I = 5
+    CortexL.I = 10
+    CortexNL.I = 20
     run(duration,report='text')
     
     Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=6)
@@ -909,6 +907,21 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
     plot(range(0,5700,100),NLbin,'b')
     plot(range(0,5700,100),WLbin,'g')
     xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('Action Firing Rates')
+    
+    a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=6)
+    b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=6)
+    c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=6)
+    figure()
+    plot(range(0,5700,100),SNrLbin,'r')
+    plot(range(0,5700,100),SNrNLbin,'b')
+    plot(range(0,5700,100),SNrWLbin,'g')
+    xlabel('Time(ms)')
+    title('SNr FR')
+    
+    figure()
+    plot(CortexPop.rate)
 
 
 
@@ -970,7 +983,7 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    ylim(8,40)
    title('Mean Tonic Firing Rates')
 
-learnAction = 1
+learnAction = 0
 if learnAction == 1:
    ThalamusL.I = 0
    ThalamusNL.I = 0
