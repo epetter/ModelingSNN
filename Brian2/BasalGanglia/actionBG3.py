@@ -22,12 +22,19 @@ from brian2 import *
 import numpy as np
 import scipy as sp
 import scipy.stats
+import matplotlib.pyplot as plt
 #prefs.codegen.target = 'weave'
 start_scope()
-duration =1000*ms #50000*ms#1000000*ms
+pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
+sequence_duration = 1000*ms # As there are three stages this will result in a 3 seconds simulation
+learn_duration = 100000*ms 
 
 recordz = 0
 plotz = 0
+
+sequence = 1
+popFiring = 1
+learnAction = 1
 #%%
 # Parameters
 
@@ -791,8 +798,8 @@ def Reward():
     action = np.where(actionSelection == np.max(actionSelection))
     if len(action[0])<2:
         if action[0]<1:
-            if ThalamusL.I[0] > 0:
-                DA.v += 20
+            #if ThalamusL.I[0] > 0:
+            DA.v += 20
             #print 'here'
 
 window = 50*ms
@@ -868,7 +875,7 @@ def frange(start, stop, step):
  while i < stop:
      yield i
      i += step
-def calculate_FR(SpikeMon,binSize=100*ms,timeWin=duration):
+def calculate_FR(SpikeMon,binSize=100*ms,timeWin=learn_duration):
     allBin = []
     for i in frange(360,int(ceil(timeWin/ms)),binSize/ms):
          binz = len(np.where((SpikeMon.t > i*ms)*(SpikeMon.t < (i*ms+binSize)))[0])/binSize
@@ -876,28 +883,27 @@ def calculate_FR(SpikeMon,binSize=100*ms,timeWin=duration):
     FR = np.mean(allBin)
     return FR, allBin       
        
-sequence = 1
 if sequence == 1:  # reproduce figure 3 in humphries et al., 2006        
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
     DA.I = 0
     CortexL.I = 0
-    run(duration,report='text')
+    run(sequence_duration,report='text')
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
     DA.I = 0
     CortexL.I = 10
     CortexNL.I = 0
-    run(duration,report='text')
+    run(sequence_duration,report='text')
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
     DA.I = 0
     CortexL.I = 10
     CortexNL.I = 20
-    run(duration,report='text')
+    run(sequence_duration,report='text')
     
     Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=6)
     NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=6)
@@ -924,13 +930,11 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
     plot(CortexPop.rate)
 
 
-
-popFiring = 0
 if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    #CortexL.I = 15
    #CortexNL.I = 15
    #CortexWL.I = 15   
-   run (duration,report='text') 
+   run (pop_duration,report='text') 
     
    STN_FR = calculate_FR(STNspikes) # divide by 3 because STN is actually 30 neurons 
    GPe_FR = calculate_FR(GPeSpikes)
@@ -963,10 +967,9 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    SNr_95 = SNr_95[2]-SNr_95[1]
    GPe_95 = mean_confidence_interval(GPeAll)
    GPe_95 = GPe_95[2]-GPe_95[1]
-   
-   import matplotlib.pyplot as plt
+
    figure()
-   plt.legend('STN','GPe','SNr')
+   #plt.legend('STN','GPe','SNr')
    plt.plot(1,np.mean(STNall),'ob')
    plt.plot(2,np.mean(GPeAll),'ob')
    plt.plot(3,np.mean(SNrAll),'ob')
@@ -983,7 +986,6 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    ylim(8,40)
    title('Mean Tonic Firing Rates')
 
-learnAction = 0
 if learnAction == 1:
    ThalamusL.I = 0
    ThalamusNL.I = 0
@@ -991,24 +993,24 @@ if learnAction == 1:
    CortexL.I = 2
    CortexNL.I = 2
    CortexWL.I = 2
-   run(duration,report='text')
+   run(learn_duration,report='text')
    
-   Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=duration/second)
-   NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=duration/second)
-   WLfr,WLbin = calculate_FR(WrongActionSpikes,binSize=100*ms,timeWin=duration/second)
+   Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
+   NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
+   WLfr,WLbin = calculate_FR(WrongActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
    figure()
-   plot(range(0,int(duration/ms)-360,100),Lbin,'r')
-   plot(range(0,int(duration/ms)-360,100),NLbin,'b')
-   plot(range(0,int(duration/ms)-360,100),WLbin,'g')
+   plot(range(0,int(learn_duration/ms)-360,100),Lbin,'r')
+   plot(range(0,int(learn_duration/ms)-360,100),NLbin,'b')
+   plot(range(0,int(learn_duration/ms)-360,100),WLbin,'g')
    xlabel('Time(ms)')
    
-   a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=duration/second)
-   b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=duration/second)
-   c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=duration/second)
+   a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=learn_duration/second)
+   b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=learn_duration/second)
+   c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=learn_duration/second)
    figure()
-   plot(range(0,int(duration/ms)-360,100),SNrLbin,'r')
-   plot(range(0,int(duration/ms)-360,100),SNrNLbin,'b')
-   plot(range(0,int(duration/ms)-360,100),SNrWLbin,'g')
+   plot(range(0,int(learn_duration/ms)-360,100),SNrLbin,'r')
+   plot(range(0,int(learn_duration/ms)-360,100),SNrNLbin,'b')
+   plot(range(0,int(learn_duration/ms)-360,100),SNrWLbin,'g')
    xlabel('Time(ms)')
    title('SNr FR')
 
