@@ -26,15 +26,16 @@ import matplotlib.pyplot as plt
 #prefs.codegen.target = 'weave'
 start_scope()
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
-sequence_duration = 1000*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 100000*ms 
+sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
+learn_duration = 200000*ms 
 
 recordz = 0
 plotz = 0
 
 sequence = 1
 popFiring = 1
-learnAction = 1
+learnAction = 0
+synfire = 0
 #%%
 # Parameters
 
@@ -209,6 +210,11 @@ onpreDA_D2='''
              traceCon += traceConstant
              '''            
 #%% Neuron Groups 
+             
+if synfire == 1:
+   n_groups = 10
+   group_size = 80 # This will result in 800 neurons which is what Laje and Buonomano 2013 used in their RNN
+   w3 = n_groups*group_size             
 
 ############ WTA neurons 
 CortexPoisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
@@ -549,17 +555,17 @@ D2_WL_GPe_WL.w = np.random.choice([s,p,d],len(D2_WL_GPe_WL.i),p=[0.33,0.33,0.34]
 
 # GPe SNR
 GPeL_SNrL = Synapses(GPe_L,SNrL,weightEqs,on_pre=subW)
-GPeL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True) 
+GPeL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.25', skip_if_invalid=True) 
 GPeL_SNrL.delay = 3*ms # Humphries, et al., 2006 
 GPeL_SNrL.w = np.random.choice([s,p],len(GPeL_SNrL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
 GPeNL_SNrNL = Synapses(GPe_NL,SNrNL,weightEqs,on_pre=subW)
-GPeNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True) 
+GPeNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.25', skip_if_invalid=True) 
 GPeNL_SNrNL.delay = 3*ms # Humphries, et al., 2006 
 GPeNL_SNrNL.w = np.random.choice([s,p],len(GPeNL_SNrNL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
 GPeWL_SNrWL = Synapses(GPe_WL,SNrWL,weightEqs,on_pre=subW)
-GPeWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True) 
+GPeWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.25', skip_if_invalid=True) 
 GPeWL_SNrWL.delay = 3*ms # Humphries, et al., 2006 
 GPeWL_SNrWL.w = np.random.choice([s,p],len(GPeWL_SNrWL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
@@ -691,17 +697,17 @@ STN_SNrWL.w = d
 
 # Excitatory STN to GPe
 STN_GPe_L = Synapses(STN,GPe_L,weightEqs,on_pre=addW)
-STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
+STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)  
 STN_GPe_L.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_L.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
 STN_GPe_NL = Synapses(STN,GPe_NL,weightEqs,on_pre=addW)
-STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
+STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)  
 STN_GPe_NL.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_NL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
 STN_GPe_WL = Synapses(STN,GPe_WL,weightEqs,on_pre=addW)
-STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
+STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)  
 STN_GPe_WL.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_WL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
@@ -791,83 +797,84 @@ if recordz == 1:
 #        ThalamusNL.I[:] = 5
 #        ThalamusWL.I[:] = 5
 
-rewWin=150*ms        
-@network_operation(dt=rewWin)
-def Reward():
-    actionSelection = np.array([len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-rewWin]),len(NoActionSpikes.t[NoActionSpikes.t > defaultclock.t-50*ms]),len(WrongActionSpikes.t[WrongActionSpikes.t > defaultclock.t-50*ms])])      
-    action = np.where(actionSelection == np.max(actionSelection))
-    if len(action[0])<2:
-        if action[0]<1:
-            #if ThalamusL.I[0] > 0:
-            DA.v += 20
-            #print 'here'
-
-window = 50*ms
-@network_operation(dt=window)
-def DA_LTP():
-    SpikeMon=CortexLSpikes
-    SpikeMon2=DASpikes
-    SynapseMon=CortexL_D1L
-    SynapseMon2=DA_D1L
-    DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-    SynapseMon.w = SynapseMon.w * 0.999
-    if len(DAind[0]) > 5: # was DA released?
-        CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-        PresynapticInd = []
-        for i in range(0,len(np.unique(CortexIndex))):
-            pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-            PresynapticInd.extend(pre[0])
-        PostsynapticInd = np.where(SynapseMon.j[PresynapticInd])  
-        NotPostsynapticInd = np.delete(range(0,len(SynapseMon.j)),PostsynapticInd[0],0)
-        #PostsynapticNeuron = np.unique(PostsynapticInd) # DA firing is broad, but need this if I want to figure out which neurons recieve both
-        #DA ... # DA firing is broad, but need this if I want to figure out which neurons recieve both
-        SynapseMon.w[PostsynapticInd[0]] += 3*(SynapseMon.traceCon[PostsynapticInd[0]] * mean(SynapseMon2.traceCon))        
-        SynapseMon.w[NotPostsynapticInd[0]] += 3*(SynapseMon.traceConPost[NotPostsynapticInd[0]] * mean(SynapseMon2.traceCon))
-        SynapseMon.w = clip(SynapseMon.w, 0, wmax)
- 
-@network_operation(dt=window)
-def DA_LTP2():
-    SpikeMon=CortexNLspikes
-    SpikeMon2=DASpikes
-    SynapseMon=CortexNL_D1NL
-    SynapseMon2=DA_D1NL
-    DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-    SynapseMon.w = SynapseMon.w * 0.999
-    if len(DAind[0]) > 5: # was DA released?
-        CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-        PresynapticInd = []
-        for i in range(0,len(np.unique(CortexIndex))):
-            pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-            PresynapticInd.extend(pre[0])
-        PostsynapticInd = np.where(SynapseMon.j[PresynapticInd])  
-        NotPostsynapticInd = np.delete(range(0,len(SynapseMon.j)),PostsynapticInd[0],0)
-        #PostsynapticNeuron = np.unique(PostsynapticInd) # DA firing is broad, but need this if I want to figure out which neurons recieve both
-        #DA ... # DA firing is broad, but need this if I want to figure out which neurons recieve both
-        SynapseMon.w[PostsynapticInd[0]] += 3*(SynapseMon.traceCon[PostsynapticInd[0]] * mean(SynapseMon2.traceCon))        
-        SynapseMon.w[NotPostsynapticInd[0]] += 3*(SynapseMon.traceConPost[NotPostsynapticInd[0]] * mean(SynapseMon2.traceCon))
-        SynapseMon.w = clip(SynapseMon.w, 0, wmax)
-
-@network_operation(dt=window)
-def DA_LTP3():
-    SpikeMon=CortexWLspikes
-    SpikeMon2=DASpikes
-    SynapseMon=CortexWL_D1WL
-    SynapseMon2=DA_D1WL
-    DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-    SynapseMon.w = SynapseMon.w * 0.999
-    if len(DAind[0]) > 5: # was DA released?
-        CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-        PresynapticInd = []
-        for i in range(0,len(np.unique(CortexIndex))):
-            pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-            PresynapticInd.extend(pre[0])
-        PostsynapticInd = np.where(SynapseMon.j[PresynapticInd])  
-        NotPostsynapticInd = np.delete(range(0,len(SynapseMon.j)),PostsynapticInd[0],0)
-        #PostsynapticNeuron = np.unique(PostsynapticInd) # DA firing is broad, but need this if I want to figure out which neurons recieve both
-        #DA ... # DA firing is broad, but need this if I want to figure out which neurons recieve both
-        SynapseMon.w[PostsynapticInd[0]] += 3*(SynapseMon.traceCon[PostsynapticInd[0]] * mean(SynapseMon2.traceCon))        
-        SynapseMon.w[NotPostsynapticInd[0]] += 3*(SynapseMon.traceConPost[NotPostsynapticInd[0]] * mean(SynapseMon2.traceCon))
-        SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+if learnAction == 1: 
+    rewWin=150*ms        
+    @network_operation(dt=rewWin)
+    def Reward():
+        actionSelection = np.array([len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-rewWin]),len(NoActionSpikes.t[NoActionSpikes.t > defaultclock.t-50*ms]),len(WrongActionSpikes.t[WrongActionSpikes.t > defaultclock.t-50*ms])])      
+        action = np.where(actionSelection == np.max(actionSelection))
+        if len(action[0])<2:
+            if action[0]<1:
+                #if ThalamusL.I[0] > 0:
+                DA.v += 20
+                #print 'here'
+    
+    window = 50*ms
+    @network_operation(dt=window)
+    def DA_LTP():
+        SpikeMon=CortexLSpikes
+        SpikeMon2=DASpikes
+        SynapseMon=CortexL_D1L
+        SynapseMon2=DA_D1L
+        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
+        SynapseMon.w = SynapseMon.w * 0.999
+        if len(DAind[0]) > 5: # was DA released?
+            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+            PresynapticInd = []
+            for i in range(0,len(np.unique(CortexIndex))):
+                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+                PresynapticInd.extend(pre[0])
+            PostsynapticInd = np.where(SynapseMon.j[PresynapticInd])  
+            NotPostsynapticInd = np.delete(range(0,len(SynapseMon.j)),PostsynapticInd[0],0)
+            #PostsynapticNeuron = np.unique(PostsynapticInd) # DA firing is broad, but need this if I want to figure out which neurons recieve both
+            #DA ... # DA firing is broad, but need this if I want to figure out which neurons recieve both
+            SynapseMon.w[PostsynapticInd[0]] += 3*(SynapseMon.traceCon[PostsynapticInd[0]] * mean(SynapseMon2.traceCon))        
+            SynapseMon.w[NotPostsynapticInd[0]] += 3*(SynapseMon.traceConPost[NotPostsynapticInd[0]] * mean(SynapseMon2.traceCon))
+            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+     
+    @network_operation(dt=window)
+    def DA_LTP2():
+        SpikeMon=CortexNLspikes
+        SpikeMon2=DASpikes
+        SynapseMon=CortexNL_D1NL
+        SynapseMon2=DA_D1NL
+        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
+        SynapseMon.w = SynapseMon.w * 0.999
+        if len(DAind[0]) > 5: # was DA released?
+            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+            PresynapticInd = []
+            for i in range(0,len(np.unique(CortexIndex))):
+                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+                PresynapticInd.extend(pre[0])
+            PostsynapticInd = np.where(SynapseMon.j[PresynapticInd])  
+            NotPostsynapticInd = np.delete(range(0,len(SynapseMon.j)),PostsynapticInd[0],0)
+            #PostsynapticNeuron = np.unique(PostsynapticInd) # DA firing is broad, but need this if I want to figure out which neurons recieve both
+            #DA ... # DA firing is broad, but need this if I want to figure out which neurons recieve both
+            SynapseMon.w[PostsynapticInd[0]] += 3*(SynapseMon.traceCon[PostsynapticInd[0]] * mean(SynapseMon2.traceCon))        
+            SynapseMon.w[NotPostsynapticInd[0]] += 3*(SynapseMon.traceConPost[NotPostsynapticInd[0]] * mean(SynapseMon2.traceCon))
+            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+    
+    @network_operation(dt=window)
+    def DA_LTP3():
+        SpikeMon=CortexWLspikes
+        SpikeMon2=DASpikes
+        SynapseMon=CortexWL_D1WL
+        SynapseMon2=DA_D1WL
+        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
+        SynapseMon.w = SynapseMon.w * 0.999
+        if len(DAind[0]) > 5: # was DA released?
+            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+            PresynapticInd = []
+            for i in range(0,len(np.unique(CortexIndex))):
+                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+                PresynapticInd.extend(pre[0])
+            PostsynapticInd = np.where(SynapseMon.j[PresynapticInd])  
+            NotPostsynapticInd = np.delete(range(0,len(SynapseMon.j)),PostsynapticInd[0],0)
+            #PostsynapticNeuron = np.unique(PostsynapticInd) # DA firing is broad, but need this if I want to figure out which neurons recieve both
+            #DA ... # DA firing is broad, but need this if I want to figure out which neurons recieve both
+            SynapseMon.w[PostsynapticInd[0]] += 3*(SynapseMon.traceCon[PostsynapticInd[0]] * mean(SynapseMon2.traceCon))        
+            SynapseMon.w[NotPostsynapticInd[0]] += 3*(SynapseMon.traceConPost[NotPostsynapticInd[0]] * mean(SynapseMon2.traceCon))
+            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
 #%% Run and analyze
        
 def frange(start, stop, step):
@@ -928,6 +935,7 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
     
     figure()
     plot(CortexPop.rate)
+    print 'Sequence Results'
 
 
 if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
@@ -985,6 +993,8 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    xlim(0,4)
    ylim(8,40)
    title('Mean Tonic Firing Rates')
+   
+   print 'Population Firing Results'
 
 if learnAction == 1:
    ThalamusL.I = 0
@@ -1014,6 +1024,7 @@ if learnAction == 1:
    xlabel('Time(ms)')
    title('SNr FR')
 
+   print 'Learned Action Results' 
 print np.str(len(ActionSpikes.t)) + '...rewarded action'
 print np.str(len(NoActionSpikes.t)) + '...unrewared action'
 print np.str(len(WrongActionSpikes.t)) + '...unrewared action'
