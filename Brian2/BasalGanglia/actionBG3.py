@@ -25,17 +25,28 @@ import scipy.stats
 import matplotlib.pyplot as plt
 #prefs.codegen.target = 'weave'
 start_scope()
-pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
-sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 200000*ms 
 
+# options
+synfire = 0
 recordz = 0
 plotz = 0
 
+# Tests/ experiments to run 
 sequence = 1
 popFiring = 1
 learnAction = 0
-synfire = 0
+
+# variables 
+pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
+sequence_duration = 1000*ms # As there are three stages this will result in a 3 seconds simulation
+learn_duration = 200000*ms 
+synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
+
+# cortical
+taum = 5*ms
+taupsp = 0.325*ms#0.325*ms
+weight = 4.86*mV
+
 #%%
 # Parameters
 
@@ -80,6 +91,17 @@ d = 5 # distal
 
 #%% Equations 
 ############ Neuron Eqs
+
+
+# equations similar to original brian synfire example... 
+# The groups are limited to about 4 and span larger distances 
+synfire_eqs =   '''
+dv/dt = ((((0.04)*v**2+(5)*v+140-u+I)+x)*((1./taum)*ms))/ms : 1
+du/dt = a*(b*v-u)/ms : 1
+dx/dt = ((-x+y/mV)*(1./taupsp)) : 1
+dy/dt = -y*(1./taupsp)+25.27*mV/ms+(39.24*mV/ms**0.5)*xi : volt
+I : 1
+'''
 
 eqs = '''
 dv/dt = ((0.04)*v**2+(5)*v+140-u+I)/ms : 1
@@ -230,21 +252,46 @@ InhInterNL = NeuronGroup(2,eqs3,threshold='v>20',reset=reset3,method='euler')
 InhInterWL = NeuronGroup(2,eqs3,threshold='v>20',reset=reset3,method='euler')
 
 ############ Cortical Neurons 
-CortexL = NeuronGroup(n,eqs,threshold='v>30',reset=reset0,method='euler')
+if synfire != 1:
+   CortexL = NeuronGroup(n,model=eqs,threshold='v>30',reset=reset0,method='euler')
+    
+   CortexL.v = c0
+   CortexL.u = b0*c0
+    
+   CortexNL = NeuronGroup(n,model=eqs,threshold='v>30',reset=reset0,method='euler')
+    
+   CortexNL.v = c0
+   CortexNL.u = b0*c0
 
-CortexL.v = c0
-CortexL.u = b0*c0
+   CortexWL = NeuronGroup(n,model=eqs,threshold='v>30',reset=reset0,method='euler')
 
-CortexNL = NeuronGroup(n,eqs,threshold='v>30',reset=reset0,method='euler')
+   CortexWL.v = c0
+   CortexWL.u = b0*c0
+   
+elif synfire == 1:
+     CortexL = NeuronGroup(N=n_groups*group_size, model=synfire_eqs,
+                           threshold='v>30', reset=reset0, refractory=2*ms,
+                           method='euler')
+     CortexL.v = c0
+     CortexL.u = b0*c0                     
+                             
+     CortexNL = NeuronGroup(N=n_groups*group_size, model=synfire_eqs,
+                           threshold='v>30', reset=reset0, refractory=2*ms,
+                           method='euler')
+     CortexNL.v = c0
+     CortexNL.u = b0*c0                               
 
-CortexNL.v = c0
-CortexNL.u = b0*c0
+     CortexWL = NeuronGroup(N=n_groups*group_size, model=synfire_eqs,
+                            threshold='v>30', reset=reset0, refractory=2*ms,
+                            method='euler')
 
-CortexWL = NeuronGroup(n,eqs,threshold='v>30',reset=reset0,method='euler')
+     CortexWL.v = c0
+     CortexWL.u = b0*c0        
 
-CortexWL.v = c0
-CortexWL.u = b0*c0
-
+     # input to the cortex 
+     Pinput = SpikeGeneratorGroup(85, np.arange(85),
+                                 np.random.randn(85)*1*ms + 50*ms)                       
+                             
 ############ Striatal Neurons  
 # D1 
 D1_L = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
@@ -415,6 +462,30 @@ InhWLNoPress.delay = 1*ms
 
 
 ############ Cortical Projections 
+# synfire connections 
+if synfire == 1:
+    CortexL_CortexL = Synapses(CortexL, CortexL, on_pre='y+=weight')
+    CortexL_CortexL.connect(j='k for k in range((int(i/group_size)+1)*group_size, (int(i/group_size)+2)*group_size) '
+    'if i<N_pre-group_size')
+    
+    CortexNL_CortexNL = Synapses(CortexNL, CortexNL, on_pre='y+=weight')
+    CortexNL_CortexNL.connect(j='k for k in range((int(i/group_size)+1)*group_size, (int(i/group_size)+2)*group_size) '
+    'if i<N_pre-group_size')    
+    
+    CortexWL_CortexWL = Synapses(CortexWL, CortexWL, on_pre='y+=weight')
+    CortexWL_CortexWL.connect(j='k for k in range((int(i/group_size)+1)*group_size, (int(i/group_size)+2)*group_size) '
+    'if i<N_pre-group_size')
+    
+    # synfire input into the cortex 
+    #SinputL = Synapses(Pinput, CortexL[:group_size], on_pre='y+=weight')
+    #SinputL.connect()
+    
+    #SinputNL = Synapses(Pinput, CortexNL[:group_size], on_pre='y+=weight')
+    #SinputNL.connect()
+    
+    #SinputWL = Synapses(Pinput, CortexWL[:group_size], on_pre='y+=weight')
+    #SinputWL.connect()    
+    
 # Cortex WTA
 CortexL_Lever = Synapses(CortexL,LeverPress,on_pre='v+=10')
 CortexL_Lever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #i=[0,1,2],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
@@ -944,9 +1015,9 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    #CortexWL.I = 15   
    run (pop_duration,report='text') 
     
-   STN_FR = calculate_FR(STNspikes) # divide by 3 because STN is actually 30 neurons 
-   GPe_FR = calculate_FR(GPeSpikes)
-   SNr_FR = calculate_FR(SNrLspikes)
+   STN_FR = calculate_FR(STNspikes,binSize=100*ms,timeWin=pop_duration) # divide by 3 because STN is actually 30 neurons 
+   GPe_FR = calculate_FR(GPeSpikes,binSize=100*ms,timeWin=pop_duration)
+   SNr_FR = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=pop_duration)
    
    print STN_FR[0]/3/2
    print 'STN'
@@ -1025,6 +1096,21 @@ if learnAction == 1:
    title('SNr FR')
 
    print 'Learned Action Results' 
+   
+if synfire == 1:
+   Mgp = SpikeMonitor(CortexL) 
+   CortexL.I = 0
+   run(synfire_duration,report='text')
+   
+   plot(Mgp.t/ms, 1.0*Mgp.i/group_size, '.')
+   plot([0, synfire_duration/ms], np.arange(n_groups).repeat(2).reshape(-1, 2).T, 'k-')
+   ylabel('group number')
+   yticks(np.arange(n_groups))
+   xlabel('time (ms)')
+   title('Cortical Synfire for LevPress Channel')
+   show()
+   
+
 print np.str(len(ActionSpikes.t)) + '...rewarded action'
 print np.str(len(NoActionSpikes.t)) + '...unrewared action'
 print np.str(len(WrongActionSpikes.t)) + '...unrewared action'
@@ -1050,15 +1136,3 @@ def visualise_connectivity(S):
     xlabel('Source neuron index')
     ylabel('Target neuron index')
     
-#visualise_connectivity(NoPress_Press)    
-#visualise_connectivity(SNr_Action)
-
-figure()
-plot(ActionSpikes.t/ms,ActionSpikes.i,'xb')
-plot(NoActionSpikes.t/ms,NoActionSpikes.i,'or')
-plot(WrongActionSpikes.t/ms,WrongActionSpikes.i,'.g')
-plot(CortexLSpikes.t/ms,np.ones([1,len(CortexLSpikes.t)])[0],'c*')
-ylim(-1,2)
-xlabel('Time(ms)')
-ylabel('Neuron Number')
-title('Brainstem Spikes')
