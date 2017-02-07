@@ -34,7 +34,7 @@ plotz = 0
 # Tests/ experiments to run 
 sequence = 1
 popFiring = 1
-learnAction = 0
+learnAction = 1
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
@@ -626,17 +626,17 @@ D2_WL_GPe_WL.w = np.random.choice([s,p,d],len(D2_WL_GPe_WL.i),p=[0.33,0.33,0.34]
 
 # GPe SNR
 GPeL_SNrL = Synapses(GPe_L,SNrL,weightEqs,on_pre=subW)
-GPeL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.25', skip_if_invalid=True) 
+GPeL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True) 
 GPeL_SNrL.delay = 3*ms # Humphries, et al., 2006 
 GPeL_SNrL.w = np.random.choice([s,p],len(GPeL_SNrL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
 GPeNL_SNrNL = Synapses(GPe_NL,SNrNL,weightEqs,on_pre=subW)
-GPeNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.25', skip_if_invalid=True) 
+GPeNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True) 
 GPeNL_SNrNL.delay = 3*ms # Humphries, et al., 2006 
 GPeNL_SNrNL.w = np.random.choice([s,p],len(GPeNL_SNrNL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
 GPeWL_SNrWL = Synapses(GPe_WL,SNrWL,weightEqs,on_pre=subW)
-GPeWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.25', skip_if_invalid=True) 
+GPeWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True) 
 GPeWL_SNrWL.delay = 3*ms # Humphries, et al., 2006 
 GPeWL_SNrWL.w = np.random.choice([s,p],len(GPeWL_SNrWL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
@@ -768,17 +768,17 @@ STN_SNrWL.w = d
 
 # Excitatory STN to GPe
 STN_GPe_L = Synapses(STN,GPe_L,weightEqs,on_pre=addW)
-STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)  
+STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True)  
 STN_GPe_L.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_L.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
 STN_GPe_NL = Synapses(STN,GPe_NL,weightEqs,on_pre=addW)
-STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)  
+STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True)  
 STN_GPe_NL.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_NL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
 STN_GPe_WL = Synapses(STN,GPe_WL,weightEqs,on_pre=addW)
-STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)  
+STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True)  
 STN_GPe_WL.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_WL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
@@ -1018,13 +1018,13 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    STN_FR = calculate_FR(STNspikes,binSize=100*ms,timeWin=pop_duration) # divide by 3 because STN is actually 30 neurons 
    GPe_FR = calculate_FR(GPeSpikes,binSize=100*ms,timeWin=pop_duration)
    SNr_FR = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=pop_duration)
-   
-   print STN_FR[0]/3/2
-   print 'STN'
-   print GPe_FR[0]/2
+
+   print 'STN'   
+   print mean(STNpop.rate)
    print 'GPe'
-   print SNr_FR[0]/2
+   print mean(GPePop.rate)
    print 'SNr'
+   print mean(SNrPop.rate)
    
    STNall = np.array([14.618,13.013,14.024,20.206,13.85,14.824,15.69,12.855,16.5189,13.46,13.69])
    STNemp = 10
