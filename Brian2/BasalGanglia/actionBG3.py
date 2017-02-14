@@ -30,17 +30,19 @@ start_scope()
 synfire = 0
 recordz = 0
 plotz = 0
+action_thresh = 10
 
 # Tests/ experiments to run 
 sequence = 1
 popFiring = 1
-learnAction = 1
+learnAction = 0
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1000*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 200000*ms 
+learn_duration = 100000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
+binSize = 100*ms 
 
 # cortical
 taum = 5*ms
@@ -817,32 +819,35 @@ D2spikes = SpikeMonitor(D2_L)
 D1spikes = SpikeMonitor(D1_L)
 D1_NLspikes = SpikeMonitor(D1_NL)
 D1nlSpikes = SpikeMonitor(D1_NL)
-#GPeTrace = StateMonitor(GPe,('v'),record=True)
 
-#CortexD1Lmon= StateMonitor(Cortex_D1L,('w'),record=True)
+
+
+
+# population activity
+ActionPop = PopulationRateMonitor(LeverPress)
+NoActionPop = PopulationRateMonitor(NoLeverPress)
+WrongActionPop = PopulationRateMonitor(WrongLeverPress)
+CortexPop = PopulationRateMonitor(CortexL)
+D1pop = PopulationRateMonitor(D1_L)
 GPePop = PopulationRateMonitor(GPe_L)
 SNrPop = PopulationRateMonitor(SNrL)
 SNrPopNL = PopulationRateMonitor(SNrNL)
 SNrPopWL = PopulationRateMonitor(SNrWL)
 STNpop = PopulationRateMonitor(STN)
-
-# population activity
 ThalamusPopL = PopulationRateMonitor(ThalamusL)
 ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
 ThalamusPopWL = PopulationRateMonitor(ThalamusWL)
-CortexPop = PopulationRateMonitor(CortexL)
-D1pop = PopulationRateMonitor(D1_L)
 
 if recordz == 1: 
     ActionTrace = StateMonitor(LeverPress,('v'),record=True)
     NoActionTrace = StateMonitor(NoLeverPress,('v'),record=True)
     WrongActionTrace = StateMonitor(NoLeverPress,('v'),record=True)
-    #Action2Trace = StateMonitor(LeverPress2,('v'),record=True)
     
+    D1_Lmon = StateMonitor(D1_L,('v'),record=True)
+    GPeTrace = StateMonitor(GPe,('v'),record=True)
     SNrL_t = StateMonitor(SNrL,('v'),record=True)
     SNrNL_t = StateMonitor(SNrNL,('v'),record=True)
     
-    D1_Lmon = StateMonitor(D1_L,('v'),record=True)
 
 #%% Network Operator
 #@network_operation(dt=50*ms)
@@ -982,31 +987,24 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
     CortexL.I = 10
     CortexNL.I = 20
     run(sequence_duration,report='text')
-    
-    Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=6)
-    NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=6)
-    WLfr,WLbin = calculate_FR(WrongActionSpikes,binSize=100*ms,timeWin=6)
+
     figure()
-    plot(range(0,5700,100),Lbin,'r')
-    plot(range(0,5700,100),NLbin,'b')
-    plot(range(0,5700,100),WLbin,'g')
+    plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('SNr Firing Rates')
+    legend('R2U')
+    
+    figure()
+    plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
     xlabel('Time(ms)')
     ylabel('Firing Rate')
     title('Action Firing Rates')
-    
-    a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=6)
-    b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=6)
-    c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=6)
-    figure()
-    plot(range(0,5700,100),SNrLbin,'r')
-    plot(range(0,5700,100),SNrNLbin,'b')
-    plot(range(0,5700,100),SNrWLbin,'g')
-    xlabel('Time(ms)')
-    title('SNr FR')
-    
-    figure()
-    plot(CortexPop.rate)
-    print 'Sequence Results'
+    legend('R2U')
 
 
 if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
@@ -1111,9 +1109,11 @@ if synfire == 1:
    show()
    
 
-print np.str(len(ActionSpikes.t)) + '...rewarded action'
-print np.str(len(NoActionSpikes.t)) + '...unrewared action'
-print np.str(len(WrongActionSpikes.t)) + '...unrewared action'
+print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
+print np.str(np.sum(SNrPopNL.rate < action_thresh*Hz)) + '...unrewared action'
+print np.str(np.sum(SNrPopWL.rate < action_thresh*Hz)) + '...unrewared action'
+
+plot(SNrPop.t/ms,SNrPop.smooth_rate(window='flat',width=0.1*ms)/Hz)
 
 #%%
 def visualise_connectivity(S):

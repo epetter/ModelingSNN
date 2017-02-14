@@ -6,7 +6,7 @@ Created on Thu Oct 27 09:42:16 2016
 """
 
 from brian2 import *
-duration = 100*ms
+duration = 10000*ms
 
 #%%
 # Parameters
