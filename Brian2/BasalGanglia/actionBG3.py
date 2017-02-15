@@ -33,7 +33,7 @@ plotz = 0
 action_thresh = 10
 
 # Tests/ experiments to run 
-sequence = 1
+sequence = 0
 popFiring = 1
 learnAction = 0
 
@@ -536,17 +536,17 @@ CortexWL_D2.w = s
 
 # Cortex STN - Hyperdirect pathway 
 CortexL_STN = Synapses(CortexL,STN,weightEqs,on_pre=addW)
-CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
+CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
 CortexL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexL_STN.w = d #d was suggested by humphries, but not enough activation 
 
 CortexNL_STN = Synapses(CortexNL,STN,weightEqs,on_pre=addW)
-CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
+CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
 CortexNL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexNL_STN.w = d
 
 CortexWL_STN = Synapses(CortexWL,STN,weightEqs,on_pre=addW)
-CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.6', skip_if_invalid=True)
+CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
 CortexWL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexWL_STN.w = d
 
@@ -770,17 +770,17 @@ STN_SNrWL.w = d
 
 # Excitatory STN to GPe
 STN_GPe_L = Synapses(STN,GPe_L,weightEqs,on_pre=addW)
-STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True)  
+STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_L.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_L.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
 STN_GPe_NL = Synapses(STN,GPe_NL,weightEqs,on_pre=addW)
-STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True)  
+STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_NL.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_NL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
 STN_GPe_WL = Synapses(STN,GPe_WL,weightEqs,on_pre=addW)
-STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.45', skip_if_invalid=True)  
+STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_WL.delay = 2*ms # Humphries, et al., 2006 
 STN_GPe_WL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
 
@@ -819,24 +819,6 @@ D2spikes = SpikeMonitor(D2_L)
 D1spikes = SpikeMonitor(D1_L)
 D1_NLspikes = SpikeMonitor(D1_NL)
 D1nlSpikes = SpikeMonitor(D1_NL)
-
-
-
-
-# population activity
-ActionPop = PopulationRateMonitor(LeverPress)
-NoActionPop = PopulationRateMonitor(NoLeverPress)
-WrongActionPop = PopulationRateMonitor(WrongLeverPress)
-CortexPop = PopulationRateMonitor(CortexL)
-D1pop = PopulationRateMonitor(D1_L)
-GPePop = PopulationRateMonitor(GPe_L)
-SNrPop = PopulationRateMonitor(SNrL)
-SNrPopNL = PopulationRateMonitor(SNrNL)
-SNrPopWL = PopulationRateMonitor(SNrWL)
-STNpop = PopulationRateMonitor(STN)
-ThalamusPopL = PopulationRateMonitor(ThalamusL)
-ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
-ThalamusPopWL = PopulationRateMonitor(ThalamusWL)
 
 if recordz == 1: 
     ActionTrace = StateMonitor(LeverPress,('v'),record=True)
@@ -883,8 +865,7 @@ if learnAction == 1:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
                 DA.v += 20
-                #print 'here'
-    
+
     window = 50*ms
     @network_operation(dt=window)
     def DA_LTP():
@@ -967,62 +948,81 @@ def calculate_FR(SpikeMon,binSize=100*ms,timeWin=learn_duration):
     return FR, allBin       
        
 if sequence == 1:  # reproduce figure 3 in humphries et al., 2006        
-    ThalamusL.I = 0
-    ThalamusNL.I = 0
-    ThalamusWL.I = 0
-    DA.I = 0
-    CortexL.I = 0
-    run(sequence_duration,report='text')
-    ThalamusL.I = 0
-    ThalamusNL.I = 0
-    ThalamusWL.I = 0
-    DA.I = 0
-    CortexL.I = 10
-    CortexNL.I = 0
-    run(sequence_duration,report='text')
-    ThalamusL.I = 0
-    ThalamusNL.I = 0
-    ThalamusWL.I = 0
-    DA.I = 0
-    CortexL.I = 10
-    CortexNL.I = 20
-    run(sequence_duration,report='text')
+   # population activity
+   ActionPop = PopulationRateMonitor(LeverPress)
+   NoActionPop = PopulationRateMonitor(NoLeverPress)
+   WrongActionPop = PopulationRateMonitor(WrongLeverPress)
+   CortexPop = PopulationRateMonitor(CortexL)
+   D1pop = PopulationRateMonitor(D1_L)
+   GPePop = PopulationRateMonitor(GPe_L)
+   SNrPop = PopulationRateMonitor(SNrL)
+   SNrPopNL = PopulationRateMonitor(SNrNL)
+   SNrPopWL = PopulationRateMonitor(SNrWL)
+   STNpop = PopulationRateMonitor(STN)
+   ThalamusPopL = PopulationRateMonitor(ThalamusL)
+   ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
+   ThalamusPopWL = PopulationRateMonitor(ThalamusWL) 
+   
+   ThalamusL.I = 0
+   ThalamusNL.I = 0
+   ThalamusWL.I = 0
+   DA.I = 0
+   CortexL.I = 0
+   run(sequence_duration,report='text')
+   ThalamusL.I = 0
+   ThalamusNL.I = 0
+   ThalamusWL.I = 0
+   DA.I = 0
+   CortexL.I = 10
+   CortexNL.I = 0
+   run(sequence_duration,report='text')
+   ThalamusL.I = 0
+   ThalamusNL.I = 0
+   ThalamusWL.I = 0
+   DA.I = 0
+   CortexL.I = 10
+   CortexNL.I = 20
+   run(sequence_duration,report='text')
 
-    figure()
-    plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-    plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
-    xlabel('Time(ms)')
-    ylabel('Firing Rate')
-    title('SNr Firing Rates')
-    legend('R2U')
+   figure()
+   plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('SNr Firing Rates')
+   legend('R2U')
     
-    figure()
-    plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-    plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    xlabel('Time(ms)')
-    ylabel('Firing Rate')
-    title('Action Firing Rates')
-    legend('R2U')
+   figure()
+   plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('Action Firing Rates')
+   legend('R2U')
 
 
-if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
-   #CortexL.I = 15
-   #CortexNL.I = 15
-   #CortexWL.I = 15   
+if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006   
+   # population activity
+   GPePop = PopulationRateMonitor(GPe_L)
+   SNrPop = PopulationRateMonitor(SNrL)
+   SNrPopNL = PopulationRateMonitor(SNrNL)
+   SNrPopWL = PopulationRateMonitor(SNrWL)
+   STNpop = PopulationRateMonitor(STN)
+   
    run (pop_duration,report='text') 
-    
-   STN_FR = calculate_FR(STNspikes,binSize=100*ms,timeWin=pop_duration) # divide by 3 because STN is actually 30 neurons 
-   GPe_FR = calculate_FR(GPeSpikes,binSize=100*ms,timeWin=pop_duration)
-   SNr_FR = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=pop_duration)
+
+   STN_FR = mean(STNpop.smooth_rate(window='gaussian',width=binSize)/Hz)
+   GPe_FR = mean(GPePop.smooth_rate(window='gaussian',width=binSize)/Hz)
+   SNr_FR = mean(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz)
 
    print 'STN'   
-   print mean(STNpop.rate)
+   print STN_FR
    print 'GPe'
-   print mean(GPePop.rate)
+   print GPe_FR
    print 'SNr'
-   print mean(SNrPop.rate)
+   print SNr_FR
    
    STNall = np.array([14.618,13.013,14.024,20.206,13.85,14.824,15.69,12.855,16.5189,13.46,13.69])
    STNemp = 10
@@ -1066,34 +1066,53 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    print 'Population Firing Results'
 
 if learnAction == 1:
-   ThalamusL.I = 0
-   ThalamusNL.I = 0
-   ThalamusWL.I = 0
-   CortexL.I = 2
-   CortexNL.I = 2
-   CortexWL.I = 2
-   run(learn_duration,report='text')
+    # Population monitors     
+    ActionPop = PopulationRateMonitor(LeverPress)
+    NoActionPop = PopulationRateMonitor(NoLeverPress)
+    WrongActionPop = PopulationRateMonitor(WrongLeverPress)
+    CortexPop = PopulationRateMonitor(CortexL)
+    D1pop = PopulationRateMonitor(D1_L)
+    GPePop = PopulationRateMonitor(GPe_L)
+    SNrPop = PopulationRateMonitor(SNrL)
+    SNrPopNL = PopulationRateMonitor(SNrNL)
+    SNrPopWL = PopulationRateMonitor(SNrWL)
+    STNpop = PopulationRateMonitor(STN)
+    ThalamusPopL = PopulationRateMonitor(ThalamusL)
+    ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
+    ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
+    
+    
+    ThalamusL.I = 0
+    ThalamusNL.I = 0
+    ThalamusWL.I = 0
+    CortexL.I = 2
+    CortexNL.I = 2
+    CortexWL.I = 2
+    run(learn_duration,report='text')
    
-   Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
-   NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
-   WLfr,WLbin = calculate_FR(WrongActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
-   figure()
-   plot(range(0,int(learn_duration/ms)-360,100),Lbin,'r')
-   plot(range(0,int(learn_duration/ms)-360,100),NLbin,'b')
-   plot(range(0,int(learn_duration/ms)-360,100),WLbin,'g')
-   xlabel('Time(ms)')
+    Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
+    NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
+    WLfr,WLbin = calculate_FR(WrongActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
+    figure()
+    plot(range(0,int(learn_duration/ms)-360,100),Lbin,'r')
+    plot(range(0,int(learn_duration/ms)-360,100),NLbin,'b')
+    plot(range(0,int(learn_duration/ms)-360,100),WLbin,'g')
+    xlabel('Time(ms)')
    
-   a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=learn_duration/second)
-   b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=learn_duration/second)
-   c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=learn_duration/second)
-   figure()
-   plot(range(0,int(learn_duration/ms)-360,100),SNrLbin,'r')
-   plot(range(0,int(learn_duration/ms)-360,100),SNrNLbin,'b')
-   plot(range(0,int(learn_duration/ms)-360,100),SNrWLbin,'g')
-   xlabel('Time(ms)')
-   title('SNr FR')
+    a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=learn_duration/second)
+    b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=learn_duration/second)
+    c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=learn_duration/second)
+    figure()
+    plot(range(0,int(learn_duration/ms)-360,100),SNrLbin,'r')
+    plot(range(0,int(learn_duration/ms)-360,100),SNrNLbin,'b')
+    plot(range(0,int(learn_duration/ms)-360,100),SNrWLbin,'g')
+    xlabel('Time(ms)')
+    title('SNr FR')
 
-   print 'Learned Action Results' 
+    print 'Learned Action Results' 
+    print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
+    print np.str(np.sum(SNrPopNL.rate < action_thresh*Hz)) + '...unrewared action'
+    print np.str(np.sum(SNrPopWL.rate < action_thresh*Hz)) + '...unrewared action'
    
 if synfire == 1:
    Mgp = SpikeMonitor(CortexL) 
@@ -1108,12 +1127,6 @@ if synfire == 1:
    title('Cortical Synfire for LevPress Channel')
    show()
    
-
-print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
-print np.str(np.sum(SNrPopNL.rate < action_thresh*Hz)) + '...unrewared action'
-print np.str(np.sum(SNrPopWL.rate < action_thresh*Hz)) + '...unrewared action'
-
-plot(SNrPop.t/ms,SNrPop.smooth_rate(window='flat',width=0.1*ms)/Hz)
 
 #%%
 def visualise_connectivity(S):
