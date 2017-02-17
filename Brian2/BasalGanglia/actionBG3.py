@@ -536,17 +536,17 @@ CortexWL_D2.w = s
 
 # Cortex STN - Hyperdirect pathway 
 CortexL_STN = Synapses(CortexL,STN,weightEqs,on_pre=addW)
-CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.85', skip_if_invalid=True)
 CortexL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexL_STN.w = d #d was suggested by humphries, but not enough activation 
 
 CortexNL_STN = Synapses(CortexNL,STN,weightEqs,on_pre=addW)
-CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.85', skip_if_invalid=True)
 CortexNL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexNL_STN.w = d
 
 CortexWL_STN = Synapses(CortexWL,STN,weightEqs,on_pre=addW)
-CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.85', skip_if_invalid=True)
 CortexWL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexWL_STN.w = d
 
