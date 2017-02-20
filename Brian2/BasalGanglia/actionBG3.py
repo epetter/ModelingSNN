@@ -1112,9 +1112,10 @@ if learnAction == 1:
     ylabel('Firing Rate')
     title('SNr Firing Rates')
     legend('R2U')
-   
-   
-
+    
+    np.mean(CortexL_D1L.w)
+    np.mean(CortexNL_D1NL.w)
+    np.mean(CortexWL_D1WL.w)
 
     print 'Learned Action Results' 
     print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
