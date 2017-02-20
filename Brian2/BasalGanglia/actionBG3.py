@@ -34,13 +34,13 @@ action_thresh = 10
 
 # Tests/ experiments to run 
 sequence = 0
-popFiring = 1
-learnAction = 0
+popFiring = 0
+learnAction = 1
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
-sequence_duration = 1000*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 100000*ms 
+sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
+learn_duration = 50000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 binSize = 100*ms 
 
@@ -536,17 +536,17 @@ CortexWL_D2.w = s
 
 # Cortex STN - Hyperdirect pathway 
 CortexL_STN = Synapses(CortexL,STN,weightEqs,on_pre=addW)
-CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.85', skip_if_invalid=True)
+CortexL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
 CortexL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexL_STN.w = d #d was suggested by humphries, but not enough activation 
 
 CortexNL_STN = Synapses(CortexNL,STN,weightEqs,on_pre=addW)
-CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.85', skip_if_invalid=True)
+CortexNL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
 CortexNL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexNL_STN.w = d
 
 CortexWL_STN = Synapses(CortexWL,STN,weightEqs,on_pre=addW)
-CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<0.85', skip_if_invalid=True)
+CortexWL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
 CortexWL_STN.delay = 2.5*ms # Humphries, et al., 2006 
 CortexWL_STN.w = d
 
@@ -772,17 +772,17 @@ STN_SNrWL.w = d
 STN_GPe_L = Synapses(STN,GPe_L,weightEqs,on_pre=addW)
 STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_L.delay = 2*ms # Humphries, et al., 2006 
-STN_GPe_L.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
+STN_GPe_L.w = d # Humphries, et al., 2006... 
 
 STN_GPe_NL = Synapses(STN,GPe_NL,weightEqs,on_pre=addW)
 STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_NL.delay = 2*ms # Humphries, et al., 2006 
-STN_GPe_NL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
+STN_GPe_NL.w = d # Humphries, et al., 2006... 
 
 STN_GPe_WL = Synapses(STN,GPe_WL,weightEqs,on_pre=addW)
 STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_WL.delay = 2*ms # Humphries, et al., 2006 
-STN_GPe_WL.w = d # Humphries, et al., 2006... added because GPe wasn't spiking 
+STN_GPe_WL.w = d # Humphries, et al., 2006... 
 
 ############ Thalamus Projections 
 
@@ -1001,6 +1001,11 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    ylabel('Firing Rate')
    title('Action Firing Rates')
    legend('R2U')
+   
+   figure() 
+   plot(D1pop.t/ms,D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
 
 
 if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006   
@@ -1089,25 +1094,27 @@ if learnAction == 1:
     CortexNL.I = 2
     CortexWL.I = 2
     run(learn_duration,report='text')
-   
-    Lfr,Lbin = calculate_FR(ActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
-    NLfr,NLbin = calculate_FR(NoActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
-    WLfr,WLbin = calculate_FR(WrongActionSpikes,binSize=100*ms,timeWin=learn_duration/second)
+    
     figure()
-    plot(range(0,int(learn_duration/ms)-360,100),Lbin,'r')
-    plot(range(0,int(learn_duration/ms)-360,100),NLbin,'b')
-    plot(range(0,int(learn_duration/ms)-360,100),WLbin,'g')
+    plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
     xlabel('Time(ms)')
-   
-    a,SNrLbin = calculate_FR(SNrLspikes,binSize=100*ms,timeWin=learn_duration/second)
-    b,SNrNLbin = calculate_FR(SNrNLspikes,binSize=100*ms,timeWin=learn_duration/second)
-    c,SNrWLbin = calculate_FR(SNrWLspikes,binSize=100*ms,timeWin=learn_duration/second)
+    ylabel('Firing Rate')
+    title('Action Firing Rates')
+    legend('R2U')
+    
     figure()
-    plot(range(0,int(learn_duration/ms)-360,100),SNrLbin,'r')
-    plot(range(0,int(learn_duration/ms)-360,100),SNrNLbin,'b')
-    plot(range(0,int(learn_duration/ms)-360,100),SNrWLbin,'g')
+    plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
     xlabel('Time(ms)')
-    title('SNr FR')
+    ylabel('Firing Rate')
+    title('SNr Firing Rates')
+    legend('R2U')
+   
+   
+
 
     print 'Learned Action Results' 
     print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
