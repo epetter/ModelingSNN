@@ -35,13 +35,16 @@ action_thresh = 10
 # Tests/ experiments to run 
 sequence = 0
 popFiring = 0
-learnAction = 1
+cortex_D1_action = 1 # a test to see if increased Cortex D1 strength can choose an action 
+learnAction = 0
+
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
 learn_duration = 50000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
+cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 binSize = 100*ms 
 
 # cortical
@@ -240,7 +243,7 @@ if synfire == 1:
    group_size = 80 # This will result in 800 neurons which is what Laje and Buonomano 2013 used in their RNN
    w3 = n_groups*group_size             
 
-############ WTA neurons 
+############ Poisson Neurons 
 CortexPoisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
 #GPePoisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
 
@@ -502,11 +505,18 @@ CortexWL_WrongLever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip
 CortexWL_WrongLever.delay = 15*ms
 
 # Cortex D1
-CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
-CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
-CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
-CortexLD1start = s#*rand(len(CortexL_D1L.i))
-CortexL_D1L.w = CortexLD1start #rand(len(Cortex_D1.i))
+if cortex_D1_action == 1:
+    CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
+    CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
+    CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
+    CortexLD1start = 30
+    CortexL_D1L.w = CortexLD1start #rand(len(Cortex_D1.i))
+else:
+    CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
+    CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
+    CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
+    CortexLD1start = s#*rand(len(CortexL_D1L.i))
+    CortexL_D1L.w = CortexLD1start #rand(len(Cortex_D1.i))
 
 CortexNL_D1NL = Synapses(CortexNL,D1_NL,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexNL_D1NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
@@ -934,19 +944,6 @@ if learnAction == 1:
             SynapseMon.w = clip(SynapseMon.w, 0, wmax)
 #%% Run and analyze
        
-def frange(start, stop, step):
- i = start
- while i < stop:
-     yield i
-     i += step
-def calculate_FR(SpikeMon,binSize=100*ms,timeWin=learn_duration):
-    allBin = []
-    for i in frange(360,int(ceil(timeWin/ms)),binSize/ms):
-         binz = len(np.where((SpikeMon.t > i*ms)*(SpikeMon.t < (i*ms+binSize)))[0])/binSize
-         allBin.append(binz)
-    FR = np.mean(allBin)
-    return FR, allBin       
-       
 if sequence == 1:  # reproduce figure 3 in humphries et al., 2006        
    # population activity
    ActionPop = PopulationRateMonitor(LeverPress)
@@ -1070,6 +1067,58 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    
    print 'Population Firing Results'
 
+if cortex_D1_action == 1:
+    # population monitors 
+    ActionPop = PopulationRateMonitor(LeverPress)
+    NoActionPop = PopulationRateMonitor(NoLeverPress)
+    WrongActionPop = PopulationRateMonitor(WrongLeverPress)
+    CortexPop = PopulationRateMonitor(CortexL)
+    D1pop = PopulationRateMonitor(D1_L)
+    GPePop = PopulationRateMonitor(GPe_L)
+    SNrPop = PopulationRateMonitor(SNrL)
+    SNrPopNL = PopulationRateMonitor(SNrNL)
+    SNrPopWL = PopulationRateMonitor(SNrWL)
+    STNpop = PopulationRateMonitor(STN)
+    ThalamusPopL = PopulationRateMonitor(ThalamusL)
+    ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
+    ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
+    
+    
+    ThalamusL.I = 0
+    ThalamusNL.I = 0
+    ThalamusWL.I = 0
+    CortexL.I = 10
+    CortexNL.I = 10
+    CortexWL.I = 10
+    run(cortex_D1_duration,report='text')
+    
+    figure()
+    plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('Action Firing Rates')
+    legend('R2U')
+    
+    figure()
+    plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('SNr Firing Rates')
+    legend('R2U')
+    
+    np.mean(CortexL_D1L.w)
+    np.mean(CortexNL_D1NL.w)
+    np.mean(CortexWL_D1WL.w)
+
+    print 'Learned Action Results' 
+    print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
+    print np.str(np.sum(SNrPopNL.rate < action_thresh*Hz)) + '...unrewared action'
+    print np.str(np.sum(SNrPopWL.rate < action_thresh*Hz)) + '...unrewared action'
+
 if learnAction == 1:
     # Population monitors     
     ActionPop = PopulationRateMonitor(LeverPress)
@@ -1090,9 +1139,9 @@ if learnAction == 1:
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
-    CortexL.I = 2
-    CortexNL.I = 2
-    CortexWL.I = 2
+    CortexL.I = 10
+    CortexNL.I = 10
+    CortexWL.I = 10
     run(learn_duration,report='text')
     
     figure()
@@ -1136,24 +1185,3 @@ if synfire == 1:
    show()
    
 
-#%%
-def visualise_connectivity(S):
-    Ns = len(S.source)
-    Nt = len(S.target)
-    figure(figsize=(10, 4))
-    subplot(121)
-    plot(zeros(Ns), arange(Ns), 'ok', ms=10)
-    plot(ones(Nt), arange(Nt), 'ok', ms=10)
-    for i, j in zip(S.i, S.j):
-        plot([0, 1], [i, j], '-k')
-    xticks([0, 1], ['Source', 'Target'])
-    ylabel('Neuron index')
-    xlim(-0.1, 1.1)
-    ylim(-1, max(Ns, Nt))
-    subplot(122)
-    plot(S.i, S.j, 'ok')
-    xlim(-1, Ns)
-    ylim(-1, Nt)
-    xlabel('Source neuron index')
-    ylabel('Target neuron index')
-    
