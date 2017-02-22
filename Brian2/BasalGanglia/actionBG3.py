@@ -35,8 +35,8 @@ action_thresh = 10
 # Tests/ experiments to run 
 sequence = 0
 popFiring = 0
-cortex_D1_action = 1 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 0
+cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
+learnAction = 1 
 
 
 # variables 
@@ -1110,9 +1110,9 @@ if cortex_D1_action == 1:
     title('SNr Firing Rates')
     legend('R2U')
     
-    np.mean(CortexL_D1L.w)
-    np.mean(CortexNL_D1NL.w)
-    np.mean(CortexWL_D1WL.w)
+    avg_D1L = np.mean(CortexL_D1L.w)
+    avg_D1NL = np.mean(CortexNL_D1NL.w)
+    avg_D1WL =  np.mean(CortexWL_D1WL.w)
 
     print 'Learned Action Results' 
     print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
@@ -1125,6 +1125,7 @@ if learnAction == 1:
     NoActionPop = PopulationRateMonitor(NoLeverPress)
     WrongActionPop = PopulationRateMonitor(WrongLeverPress)
     CortexPop = PopulationRateMonitor(CortexL)
+    DApop = PopulationRateMonitor(DA)
     D1pop = PopulationRateMonitor(D1_L)
     GPePop = PopulationRateMonitor(GPe_L)
     SNrPop = PopulationRateMonitor(SNrL)
@@ -1165,7 +1166,13 @@ if learnAction == 1:
     np.mean(CortexL_D1L.w)
     np.mean(CortexNL_D1NL.w)
     np.mean(CortexWL_D1WL.w)
-
+    
+    figure()
+    plot(DApop.t/ms,DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('DA Firing Rates')
+    
     print 'Learned Action Results' 
     print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
     print np.str(np.sum(SNrPopNL.rate < action_thresh*Hz)) + '...unrewared action'
