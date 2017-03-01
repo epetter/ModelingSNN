@@ -36,7 +36,8 @@ action_thresh = 10
 sequence = 0
 popFiring = 0
 cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 1 
+learnAction = 1 # test to see if an action can be learned  
+test_DA = 0 # test to look at DA firing 
 
 
 # variables 
@@ -45,6 +46,7 @@ sequence_duration = 1500*ms # As there are three stages this will result in a 3 
 learn_duration = 50000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
+DA_duration = 100*ms
 binSize = 100*ms 
 
 # cortical
@@ -866,7 +868,7 @@ if recordz == 1:
 #        ThalamusWL.I[:] = 5
 
 if learnAction == 1: 
-    rewWin=150*ms        
+    rewWin=50*ms        
     @network_operation(dt=rewWin)
     def Reward():
         actionSelection = np.array([len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-rewWin]),len(NoActionSpikes.t[NoActionSpikes.t > defaultclock.t-50*ms]),len(WrongActionSpikes.t[WrongActionSpikes.t > defaultclock.t-50*ms])])      
@@ -874,7 +876,7 @@ if learnAction == 1:
         if len(action[0])<2:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
-                DA.v += 20
+                DA.I += 5
 
     window = 50*ms
     @network_operation(dt=window)
@@ -1191,4 +1193,59 @@ if synfire == 1:
    title('Cortical Synfire for LevPress Channel')
    show()
    
+   
+if test_DA == 1:
+   ActionPop = PopulationRateMonitor(LeverPress)
+   NoActionPop = PopulationRateMonitor(NoLeverPress)
+   WrongActionPop = PopulationRateMonitor(WrongLeverPress)
+   CortexPop = PopulationRateMonitor(CortexL)
+   DApop = PopulationRateMonitor(DA)
+   D1pop = PopulationRateMonitor(D1_L)
+   GPePop = PopulationRateMonitor(GPe_L)
+   SNrPop = PopulationRateMonitor(SNrL)
+   SNrPopNL = PopulationRateMonitor(SNrNL)
+   SNrPopWL = PopulationRateMonitor(SNrWL)
+   STNpop = PopulationRateMonitor(STN)
+   ThalamusPopL = PopulationRateMonitor(ThalamusL)
+   ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
+   ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
+
+   DAvolts = StateMonitor(DA,('v'),record=True) 
+    
+   DA.I = 5
+   run(DA_duration,report='text')
+   DA.I = 0
+   run(DA_duration,report='text')
+   DA.I = 5
+   run(DA_duration,report='text')
+
+   figure()
+   plot(DAvolts.t,DAvolts.v[0])    
+    
+   figure()
+   plot(ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   plot(WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('Action Firing Rates')
+   legend('R2U')
+
+   figure()
+   plot(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   plot(SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('SNr Firing Rates')
+   legend('R2U')
+
+   print  np.mean(DApop.rate)
+
+   figure()
+   plot(DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('DA Firing Rates')
+
 
