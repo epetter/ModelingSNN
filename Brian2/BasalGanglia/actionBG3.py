@@ -876,7 +876,9 @@ if learnAction == 1:
         if len(action[0])<2:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
-                DA.I += 5
+                DA.I += 10 # If a reward was recieved give DA
+            else:
+                DA.I = 0 # If no-reward was recieved zero out DA current 
 
     window = 50*ms
     @network_operation(dt=window)
