@@ -43,7 +43,7 @@ test_DA = 0 # test to look at DA firing
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 50000*ms 
+learn_duration = 100000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -876,11 +876,11 @@ if learnAction == 1:
         if len(action[0])<2:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
-                DA.I += 10 # If a reward was recieved give DA
+                DA.I += 5 # If a reward was recieved give DA
             else:
                 DA.I = 0 # If no-reward was recieved zero out DA current 
 
-    window = 50*ms
+    window = 10*ms
     @network_operation(dt=window)
     def DA_LTP():
         SpikeMon=CortexLSpikes
@@ -1144,9 +1144,9 @@ if learnAction == 1:
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
-    CortexL.I = 10
-    CortexNL.I = 10
-    CortexWL.I = 10
+    CortexL.I = 5
+    CortexNL.I = 5
+    CortexWL.I = 5
     run(learn_duration,report='text')
     
     figure()
