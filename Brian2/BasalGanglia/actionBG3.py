@@ -87,7 +87,7 @@ Apost = -Apre*taupre/taupost*1.05
 wScale = 1 # amount to scale weights by
 
 # MSN plasticity
-traceTau = traceTauPost = 1200*ms  # this will change integration window
+traceTau = traceTauPost = 120*ms  # this will change integration window # was 1200
 traceConstant = 0.01 # this will change maximum weight change
 tracePostConstant = -traceConstant*traceTau/traceTauPost*1.05
 
@@ -876,7 +876,7 @@ if learnAction == 1:
         if len(action[0])<2:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
-                DA.I += 5 # If a reward was recieved give DA
+                DA.I += 6 # If a reward was recieved give DA
             else:
                 DA.I = 0 # If no-reward was recieved zero out DA current 
 
@@ -1144,9 +1144,9 @@ if learnAction == 1:
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
-    CortexL.I = 5
-    CortexNL.I = 5
-    CortexWL.I = 5
+    CortexL.I = 10
+    CortexNL.I = 10
+    CortexWL.I = 10
     run(learn_duration,report='text')
     
     figure()
@@ -1167,9 +1167,9 @@ if learnAction == 1:
     title('SNr Firing Rates')
     legend('R2U')
     
-    np.mean(CortexL_D1L.w)
-    np.mean(CortexNL_D1NL.w)
-    np.mean(CortexWL_D1WL.w)
+    print np.mean(CortexL_D1L.w)
+    print np.mean(CortexNL_D1NL.w)
+    print np.mean(CortexWL_D1WL.w)
     
     figure()
     plot(DApop.t/ms,DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
