@@ -43,7 +43,7 @@ test_DA = 0 # test to look at DA firing
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 10000*ms 
+learn_duration = 100000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -876,7 +876,7 @@ if learnAction == 1:
         if len(action[0])<2:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
-                DA.I += 10 # If a reward was recieved give DA
+                DA.I += 3 # If a reward was recieved give DA
             else:
                 DA.I = 0 # If no-reward was recieved zero out DA current 
 
@@ -1099,11 +1099,11 @@ if cortex_D1_action == 1:
     figure()
     plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
     plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
     xlabel('Time(ms)')
     ylabel('Firing Rate')
     title('Action Firing Rates')
-    legend('R2U')
+    legend('RUU')
     
     figure()
     plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
@@ -1112,7 +1112,7 @@ if cortex_D1_action == 1:
     xlabel('Time(ms)')
     ylabel('Firing Rate')
     title('SNr Firing Rates')
-    legend('R2U')
+    legend('RUU')
     
     avg_D1L = np.mean(CortexL_D1L.w)
     avg_D1NL = np.mean(CortexNL_D1NL.w)
