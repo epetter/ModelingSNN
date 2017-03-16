@@ -43,7 +43,7 @@ test_DA = 0 # test to look at DA firing
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 100000*ms 
+learn_duration = 50000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -876,7 +876,7 @@ if learnAction == 1:
         if len(action[0])<2:
             if action[0]<1:
                 #if ThalamusL.I[0] > 0:
-                DA.I += 3 # If a reward was recieved give DA
+                DA.I += 10 # If a reward was recieved give DA
             else:
                 DA.I = 0 # If no-reward was recieved zero out DA current 
 
