@@ -21,8 +21,10 @@ Created on Tue Dec 06 10:05:50 2016
 
 ###############
 # Basal Ganglia for action selection
-# EP 161214
-##############
+# EP 170316
+###############
+
+# Add stochasticity xi**tau
 
 #%% import and setup 
 from brian2 import *
@@ -890,87 +892,59 @@ if learnAction == 1:
             else:
                 DA.I = 0 # If no-reward was recieved zero out DA current 
 
+    def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
+        DAind = np.where(SpikeMon2.t > (t - window)) 
+        SynapseMon.w = SynapseMon.w * 0.999
+        if len(DAind[0]) > 5: # was DA released?
+            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+            PresynapticInd = []
+            for i in range(0,len(np.unique(CortexIndex))):
+                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+                PresynapticInd.extend(pre[0])
+            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
+            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
+            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
+            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
+            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
+            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
+            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
+            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+                
     window = 10*ms
     @network_operation(dt=window)
-    def DA_LTP():
-        SpikeMon=CortexLSpikes
-        SpikeMon2=DASpikes
-        SpikeMon3 = D1_Lspikes 
-        SynapseMon=CortexL_D1L
-        SynapseMon2=DA_D1L
-        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-        SynapseMon.w = SynapseMon.w * 0.999
-        if len(DAind[0]) > 5: # was DA released?
-            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-            PresynapticInd = []
-            for i in range(0,len(np.unique(CortexIndex))):
-                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-                PresynapticInd.extend(pre[0])
-            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
-            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
-            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
-            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
-            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
-            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
-   
-   
-#act_MSN = np.where(D1-L > MSN_High) 
-#high_synaptic_ind = np.concatenate([np.where(CortexL_D1L.j == x)[0] for x in act_MSN[0]]) 
-#s2 = set(high_synaptic_ind)
-#strengthen_synapse = [val for val in PresynapticInd if val in s2]
-#SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))        
-   
-   
-    @network_operation(dt=window)
-    def DA_LTP2():
-        SpikeMon=CortexNLspikes
-        SpikeMon2=DASpikes
-        SpikeMon3 = D1_NLspikes 
-        SynapseMon=CortexNL_D1NL
-        SynapseMon2=DA_D1NL
-        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-        SynapseMon.w = SynapseMon.w * 0.999
-        if len(DAind[0]) > 5: # was DA released?
-            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-            PresynapticInd = []
-            for i in range(0,len(np.unique(CortexIndex))):
-                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-                PresynapticInd.extend(pre[0])
-            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
-            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
-            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
-            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
-            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
-            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
-   
+    def calculate_LTP(t):
+        DA_LTP(t,CortexLSpikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
     
-    @network_operation(dt=window)
-    def DA_LTP3():
-        SpikeMon=CortexWLspikes
-        SpikeMon2=DASpikes
-        SpikeMon3 = D1_WLspikes         
-        SynapseMon=CortexWL_D1WL
-        SynapseMon2=DA_D1WL
-        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-        SynapseMon.w = SynapseMon.w * 0.999
-        if len(DAind[0]) > 5: # was DA released?
-            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-            PresynapticInd = []
-            for i in range(0,len(np.unique(CortexIndex))):
-                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-                PresynapticInd.extend(pre[0])
-            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
-            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
-            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
-            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
-            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
-            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+    def calculate_LTP2(t):
+        DA_LTP(t,CortexNLSpikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
+
+    def calculate_LTP3(t):
+        DA_LTP(t,CortexWLSpikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)                   
+
+#    @network_operation(dt=window)
+#    def DA_LTP2():
+#        SpikeMon=CortexNLspikes
+#        SpikeMon2=DASpikes
+#        SpikeMon3 = D1_NLspikes 
+#        SynapseMon=CortexNL_D1NL
+#        SynapseMon2=DA_D1NL
+#        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
+#        SynapseMon.w = SynapseMon.w * 0.999
+#        if len(DAind[0]) > 5: # was DA released?
+#            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+#            PresynapticInd = []
+#            for i in range(0,len(np.unique(CortexIndex))):
+#                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+#                PresynapticInd.extend(pre[0])
+#            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
+#            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
+#            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
+#            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
+#            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
+#            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
+#            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
+#            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+   
    
 #%% Run and analyze
        
