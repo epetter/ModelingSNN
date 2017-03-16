@@ -24,7 +24,7 @@ Created on Tue Dec 06 10:05:50 2016
 # EP 170316
 ###############
 
-# Add stochasticity xi**tau
+# Add stochasticity xi*second**.5
 
 #%% import and setup 
 from brian2 import *
@@ -52,7 +52,7 @@ test_DA = 0 # test to look at DA firing
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 100000*ms 
+learn_duration = 10000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -835,7 +835,7 @@ SNrLspikes = SpikeMonitor(SNrL)
 SNrNLspikes = SpikeMonitor(SNrNL)
 SNrWLspikes = SpikeMonitor(SNrWL)
 STNspikes = SpikeMonitor(STN)
-CortexLSpikes= SpikeMonitor(CortexL)
+CortexLspikes= SpikeMonitor(CortexL)
 CortexNLspikes = SpikeMonitor(CortexNL)
 CortexWLspikes = SpikeMonitor(CortexWL)
 DASpikes = SpikeMonitor(DA)
@@ -910,16 +910,18 @@ if learnAction == 1:
             SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
             SynapseMon.w = clip(SynapseMon.w, 0, wmax)
                 
-    window = 10*ms
+    window = 50*ms
     @network_operation(dt=window)
     def calculate_LTP(t):
-        DA_LTP(t,CortexLSpikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
+        DA_LTP(t,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
     
+    @network_operation(dt=window)
     def calculate_LTP2(t):
-        DA_LTP(t,CortexNLSpikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
+        DA_LTP(t,CortexNLspikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
 
+    @network_operation(dt=window)
     def calculate_LTP3(t):
-        DA_LTP(t,CortexWLSpikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)                   
+        DA_LTP(t,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)                   
 
 #    @network_operation(dt=window)
 #    def DA_LTP2():
