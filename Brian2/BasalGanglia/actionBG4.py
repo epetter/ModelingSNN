@@ -46,15 +46,15 @@ action_thresh = 10
 # Tests/ experiments to run 
 sequence = 0
 popFiring = 0
-cortex_D1_action = 1 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 0 # test to see if an action can be learned  
+cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
+learnAction = 1 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 200000*ms 
+learn_duration = 20000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -1093,6 +1093,14 @@ if cortex_D1_action == 1:
     title('SNr Firing Rates')
     legend('RUU')
     
+    figure()
+    plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('Cortical Firing Rates')
+    legend('R')
+    
+    
     avg_D1L = np.mean(CortexL_D1L.w)
     avg_D1NL = np.mean(CortexNL_D1NL.w)
     avg_D1WL =  np.mean(CortexWL_D1WL.w)
@@ -1187,6 +1195,7 @@ if synfire == 1:
    CortexL.I = 0
    run(synfire_duration,report='text')
    
+   figure()
    plot(Mgp.t/ms, 1.0*Mgp.i/group_size, '.')
    plot([0, synfire_duration/ms], np.arange(n_groups).repeat(2).reshape(-1, 2).T, 'k-')
    ylabel('group number')
