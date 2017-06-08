@@ -26,6 +26,8 @@ Created on Tue Dec 06 10:05:50 2016
 
 # Add stochasticity xi*second**.5
 
+# make cortical activity more random across channels
+
 #%% import and setup 
 from brian2 import *
 import numpy as np
@@ -36,7 +38,7 @@ import matplotlib.pyplot as plt
 start_scope()
 
 # options
-synfire = 0
+synfire = 1
 recordz = 0
 plotz = 0
 action_thresh = 10
@@ -44,15 +46,15 @@ action_thresh = 10
 # Tests/ experiments to run 
 sequence = 0
 popFiring = 0
-cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 1 # test to see if an action can be learned  
+cortex_D1_action = 1 # a test to see if increased Cortex D1 strength can choose an action 
+learnAction = 0 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 10000*ms 
+learn_duration = 200000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -65,6 +67,7 @@ weight = 4.86*mV
 
 # Cortical-MSN plasticity
 MSN_High = -60
+SNr_thresh = 60*Hz 
 
 #%%
 # Parameters
@@ -99,7 +102,7 @@ Apost = -Apre*taupre/taupost*1.05
 wScale = 1 # amount to scale weights by
 
 # MSN plasticity
-traceTau = traceTauPost = 500*ms  # this will change integration window # was 1200
+traceTau = traceTauPost = 50*ms  # this will change integration window # was 1200
 traceConstant = 0.01 # this will change maximum weight change
 tracePostConstant = -traceConstant*traceTau/traceTauPost*1.05
 
@@ -258,7 +261,9 @@ if synfire == 1:
    w3 = n_groups*group_size             
 
 ############ Poisson Neurons 
-CortexPoisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
+CortexL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
+CortexNL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
+CortexWL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
 #GPePoisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
 
 ############ WTA neurons 
@@ -684,17 +689,17 @@ GPe_WL_STN.w = np.random.choice([s,p,d],len(GPe_WL_STN.i),p=[0.3,0.4,0.3]) # Hum
 
 ############ Poisson Projections 
 # Poisson Cortex... introduce some noise into the whole system 
-P_CortexL = Synapses(CortexPoisson,CortexL,weightEqs,on_pre=addW)
+P_CortexL = Synapses(CortexL_Poisson,CortexL,weightEqs,on_pre=addW)
 P_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
 P_CortexL.delay = 5*ms
 P_CortexL.w = 5
 
-P_CortexNL = Synapses(CortexPoisson,CortexNL,weightEqs,on_pre=addW)
+P_CortexNL = Synapses(CortexNL_Poisson,CortexNL,weightEqs,on_pre=addW)
 P_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
 P_CortexNL.delay = 5*ms
 P_CortexNL.w = 5
 
-P_CortexWL = Synapses(CortexPoisson,CortexWL,weightEqs,on_pre=addW)
+P_CortexWL = Synapses(CortexWL_Poisson,CortexWL,weightEqs,on_pre=addW)
 P_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
 P_CortexWL.delay = 5*ms
 P_CortexWL.w = 5
@@ -856,18 +861,6 @@ if recordz == 1:
     
 
 #%% Network Operator
-#@network_operation(dt=50*ms)
-#def updateWeights():
-#    actionSelection = np.array([len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-50*ms]),len(NoActionSpikes.t[NoActionSpikes.t > defaultclock.t-50*ms]),len(WrongActionSpikes.t[WrongActionSpikes.t > defaultclock.t-50*ms])])      
-#    action = np.where(actionSelection == np.max(actionSelection))
-#    #print actionSelection
-#    if len(action[0])<2:
-#        if action[0]<1:
-#            CortexL_D1L.w += 1
-           #indz = np.where(Cortex_D1.t > (defaultclock.t - 50*ms)) #Cortex_D2_DAtrace.t > defaultclock.t-10*ms)
-           #Cortex_D1.w[indz[0]] += 1
-          #print 'learn'
-
 #@network_operation(dt=500*ms) # update the sensory input every 100ms
 #def sensInput():
 #    if ThalamusL.I[0] > 0: # if one is above zero all should be above zero 
@@ -880,73 +873,57 @@ if recordz == 1:
 #        ThalamusWL.I[:] = 5
 
 if learnAction == 1: 
-    rewWin=50*ms        
-    @network_operation(dt=rewWin)
-    def Reward():
-        actionSelection = np.array([len(ActionSpikes.t[ActionSpikes.t > defaultclock.t-rewWin]),len(NoActionSpikes.t[NoActionSpikes.t > defaultclock.t-50*ms]),len(WrongActionSpikes.t[WrongActionSpikes.t > defaultclock.t-50*ms])])      
-        action = np.where(actionSelection == np.max(actionSelection))
-        if len(action[0])<2:
-            if action[0]<1:
-                #if ThalamusL.I[0] > 0:
-                DA.I += 10 # If a reward was recieved give DA
-            else:
-                DA.I = 0 # If no-reward was recieved zero out DA current 
+   def calculate_FR(spike_monitor,integration_window,t):
+       rate = np.size(np.where(spike_monitor.t > t-integration_window))/n/integration_window
+       return rate
 
-    def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
-        DAind = np.where(SpikeMon2.t > (t - window)) 
-        SynapseMon.w = SynapseMon.w * 0.999
-        if len(DAind[0]) > 5: # was DA released?
-            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-            PresynapticInd = []
-            for i in range(0,len(np.unique(CortexIndex))):
-                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-                PresynapticInd.extend(pre[0])
-            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
-            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
-            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
-            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
-            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
-            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
-                
-    window = 50*ms
-    @network_operation(dt=window)
-    def calculate_LTP(t):
-        DA_LTP(t,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
+   def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
+       DAind = np.where(SpikeMon2.t > (t - window)) 
+       #SynapseMon.w = SynapseMon.w * 0.999
+       if len(DAind[0]) > 5: # was DA released?
+           CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+           PresynapticInd = []
+           for i in range(0,len(np.unique(CortexIndex))):
+               pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+               PresynapticInd.extend(pre[0])
+           act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
+           high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
+           s2 = set(high_synaptic_ind) # set object for high_synpatic ind
+           strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
+           not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
+           SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
+           SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+
+#network operations     
+   rew_win=30*ms        
+   @network_operation(dt=rew_win)
+   def Reward(t):
+       SNrL_rate = calculate_FR(SNrLspikes,rew_win,t)
+       SNrNL_rate = calculate_FR(SNrNLspikes,rew_win,t)
+       SNrWL_rate = calculate_FR(SNrWLspikes,rew_win,t)
+       action = np.where(np.min([SNrL_rate,SNrNL_rate,SNrWL_rate]))
+       if action[0] == 0:
+          if SNrL_rate < SNr_thresh:
+               #if ThalamusL.I[0] > 0:
+             DA.I += 2 # If a reward was recieved give DA
+          else :
+              DA.I = 0          
+       else:
+            DA.I = 0 # If no-reward was recieved zero out DA current 
+           
+   window = 20*ms
+   @network_operation(dt=window)
+   def calculate_LTP(t):
+       DA_LTP(t,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
+
+   @network_operation(dt=window)
+   def calculate_LTP2(t):
+       DA_LTP(t,CortexNLspikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
     
-    @network_operation(dt=window)
-    def calculate_LTP2(t):
-        DA_LTP(t,CortexNLspikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
-
-    @network_operation(dt=window)
-    def calculate_LTP3(t):
-        DA_LTP(t,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)                   
-
-#    @network_operation(dt=window)
-#    def DA_LTP2():
-#        SpikeMon=CortexNLspikes
-#        SpikeMon2=DASpikes
-#        SpikeMon3 = D1_NLspikes 
-#        SynapseMon=CortexNL_D1NL
-#        SynapseMon2=DA_D1NL
-#        DAind = np.where(SpikeMon2.t > (defaultclock.t - window)) 
-#        SynapseMon.w = SynapseMon.w * 0.999
-#        if len(DAind[0]) > 5: # was DA released?
-#            CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-#            PresynapticInd = []
-#            for i in range(0,len(np.unique(CortexIndex))):
-#                pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-#                PresynapticInd.extend(pre[0])
-#            act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-#            high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-#            s2 = set(high_synaptic_ind) # set opject for high_synpatic ind
-#            strengthen_synapse = [val for val in PresynapticInd if val in s2] # 
-#            not_strengthen_synapse = np.delete(range(0,len(SynapseMon.j)),strengthen_synapse,0)
-#            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))       
-#            SynapseMon.w[not_strengthen_synapse] += 3*(SynapseMon.traceConPost[not_strengthen_synapse] * mean(SynapseMon2.traceCon))
-#            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
-   
+   @network_operation(dt=window)    
+   def calculate_LTP3(t):
+       DA_LTP(t,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)                   
    
 #%% Run and analyze
        
@@ -1093,9 +1070,9 @@ if cortex_D1_action == 1:
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
-    CortexL.I = 10
-    CortexNL.I = 10
-    CortexWL.I = 10
+    CortexL.I = 5
+    CortexNL.I = 5
+    CortexWL.I = 5
     run(cortex_D1_duration,report='text')
     
     figure()
@@ -1130,9 +1107,13 @@ if learnAction == 1:
     ActionPop = PopulationRateMonitor(LeverPress)
     NoActionPop = PopulationRateMonitor(NoLeverPress)
     WrongActionPop = PopulationRateMonitor(WrongLeverPress)
-    CortexPop = PopulationRateMonitor(CortexL)
+    CortexLpop = PopulationRateMonitor(CortexL)
+    CortexNLpop = PopulationRateMonitor(CortexNL)
+    CortexWLpop = PopulationRateMonitor(CortexWL)
     DApop = PopulationRateMonitor(DA)
-    D1pop = PopulationRateMonitor(D1_L)
+    D1Lpop = PopulationRateMonitor(D1_L)
+    D1NLpop = PopulationRateMonitor(D1_NL)
+    D1WLpop = PopulationRateMonitor(D1_WL)
     GPePop = PopulationRateMonitor(GPe_L)
     SNrPop = PopulationRateMonitor(SNrL)
     SNrPopNL = PopulationRateMonitor(SNrNL)
@@ -1142,13 +1123,12 @@ if learnAction == 1:
     ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
     ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
     
-    
-    ThalamusL.I = 0
-    ThalamusNL.I = 0
-    ThalamusWL.I = 0
-    CortexL.I = 10
-    CortexNL.I = 10
-    CortexWL.I = 10
+    #ThalamusL.I = 10
+    #ThalamusNL.I = 10
+    #ThalamusWL.I = 10
+    CortexL.I = 5
+    CortexNL.I = 5
+    CortexWL.I = 5
     run(learn_duration,report='text')
     
     figure()
@@ -1183,6 +1163,24 @@ if learnAction == 1:
     print np.str(np.sum(SNrPop.rate < action_thresh*Hz)) + '...rewarded action'
     print np.str(np.sum(SNrPopNL.rate < action_thresh*Hz)) + '...unrewared action'
     print np.str(np.sum(SNrPopWL.rate < action_thresh*Hz)) + '...unrewared action'
+    
+    figure()
+    plot(CortexLpop.t/ms,CortexLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(CortexNLpop.t/ms,CortexNLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(CortexWLpop.t/ms,CortexWLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('Cortex Firing Rates')
+    legend('R2U')
+   
+    figure()
+    plot(D1Lpop.t/ms,D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(D1NLpop.t/ms,D1NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(D1WLpop.t/ms,D1WLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('D1 Firing Rates')
+    legend('R2U')   
    
 if synfire == 1:
    Mgp = SpikeMonitor(CortexL) 
