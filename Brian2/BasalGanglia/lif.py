@@ -2,7 +2,7 @@ from brian2 import *
 
 start_scope()
 
-tau = 20*ms
+tau = 200*ms
 n = 100
 b = 1.2 # constant current mean, the modulation varies
 freq = 10*Hz
