@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 start_scope()
 
 # options
-synfire = 0
+synfire = 1
 recordz = 0
 plotz = 0
 action_thresh = 10
@@ -46,8 +46,8 @@ action_thresh = 10
 # Tests/ experiments to run 
 sequence = 0
 popFiring = 0
-cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 1 # test to see if an action can be learned  
+cortex_D1_action = 1 # a test to see if increased Cortex D1 strength can choose an action 
+learnAction = 0 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 
