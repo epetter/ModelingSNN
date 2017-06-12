@@ -44,14 +44,12 @@ recordz = 0
 plotz = 0
 action_thresh = 10
 
-
 # Tests/ experiments to run 
-sequence = 0
-popFiring = 1
+sequence = 1
+popFiring = 0
 cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
 learnAction = 0 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
-
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
@@ -268,7 +266,6 @@ if synfire == 1:
 CortexL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
 CortexNL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
 CortexWL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
-#GPePoisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to STN neurons
 
 ############ WTA neurons 
 LeverPress = NeuronGroup(2,eqs2,threshold='v>30',reset=reset,method='euler')
@@ -395,16 +392,6 @@ STN = NeuronGroup(n*numChannels,STNeqs,threshold='v>30',reset=STNreset,method='e
 
 STN.v = (-65)
 STN.u = (-65*1.5)
-
-#STN_NL = NeuronGroup(n,eqs2,threshold='v>20',reset=reset,method='euler') # Humphries, et al., 2006 
-
-#STN_NL.v = c
-#STN_NL.u = b*c
-
-#STN_WL = NeuronGroup(n,eqs2,threshold='v>20',reset=reset,method='euler') # Humphries, et al., 2006 
-
-#STN_WL.v = c
-#STN_WL.u = b*c
 
 ############ Thalamic Neurons 
 ThalamusL = NeuronGroup(n,eqs,threshold='v>30',reset=reset0,method='euler')
@@ -553,17 +540,17 @@ CortexWL_D1WL.w = s#s*rand(len(CortexWL_D1WL.i))
 
 # Cortex D2 
 CortexL_D2 = Synapses(CortexL,D2_L,weightEqs,on_pre=addW) #on_pre='v=+10')
-CortexL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexL_D2.delay = 10*ms # Humphries, et al., 2006 
 CortexL_D2.w = s
 
 CortexNL_D2 = Synapses(CortexNL,D2_NL,weightEqs,on_pre=addW) #on_pre='v=+10')
-CortexNL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexNL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexNL_D2.delay = 10*ms # Humphries, et al., 2006 
 CortexNL_D2.w = s
 
 CortexWL_D2 = Synapses(CortexWL,D2_WL,weightEqs,on_pre=addW) #on_pre='v=+10')
-CortexWL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+CortexWL_D2.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexWL_D2.delay = 10*ms # Humphries, et al., 2006 
 CortexWL_D2.w = s
 
@@ -587,7 +574,6 @@ CortexWL_STN.w = d
 # DA projections to D1
 DA_D1L = Synapses(DA,D1_L,DAstdp,on_pre=onpreDA_D1,on_post=onpostDA)
 DA_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
-#DA_D1.connect(condition='i!=j',p=0.75,skip_if_invalid=True)  #p=0.1) # I think I'd rather have a broad range of DA with synapse specific plasticity at places with glut and DA
 DA_D1L.delay = 5*ms
 DA_D1L.w = s#rand(len(DA_D1L.i))
 
@@ -605,7 +591,6 @@ DA_D1WL.w = s#rand(len(DA_D1WL.i))
 # DA projections to D1
 DA_D2L = Synapses(DA,D2_L,DAstdp,on_pre=onpreDA_D2,on_post=onpostDA)
 DA_D2L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
-#DA_D1.connect(condition='i!=j',p=0.75,skip_if_invalid=True)  #p=0.1) # I think I'd rather have a broad range of DA with synapse specific plasticity at places with glut and DA
 DA_D2L.delay = 5*ms
 DA_D2L.w = s#rand(len(DA_D1L.i))
 
@@ -653,11 +638,6 @@ D2_WL_GPe_WL.delay = 5*ms # Humphries, et al., 2006
 D2_WL_GPe_WL.w = np.random.choice([s,p,d],len(D2_WL_GPe_WL.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
 ############ GPe Projections 
-# Collaterals
-#GPe_GPe = Synapses(GPe,GPe,weightEqs,on_pre=subW)
-#GPe_GPe.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-#GPe_GPe.delay = 4*ms # Humphries, et al., 2006 
-#GPe_GPe.w = np.random.choice([s,p]) # Humphries, et al., 2006 
 
 # GPe SNR
 GPeL_SNrL = Synapses(GPe_L,SNrL,weightEqs,on_pre=subW)
@@ -863,19 +843,6 @@ if recordz == 1:
     GPeTrace = StateMonitor(GPe,('v'),record=True)
     SNrL_t = StateMonitor(SNrL,('v'),record=True)
     SNrNL_t = StateMonitor(SNrNL,('v'),record=True)
-    
-
-#%% Network Operator
-#@network_operation(dt=500*ms) # update the sensory input every 100ms
-#def sensInput():
-#    if ThalamusL.I[0] > 0: # if one is above zero all should be above zero 
-#       ThalamusL.I[:] = 0
-#       ThalamusNL.I[:] = 0
-#       ThalamusWL.I[:] = 0
-#    else: 
-#        ThalamusL.I[:] = 5
-#        ThalamusNL.I[:] = 5
-#        ThalamusWL.I[:] = 5
 
 win = [0.25, 0.25, 0.5]
 
@@ -936,7 +903,6 @@ if learnAction == 1:
        action = np.where(np.min([SNrL_rate,SNrNL_rate,SNrWL_rate]))
        if action[0] == 0:
           if SNrL_rate < SNr_thresh:
-               #if ThalamusL.I[0] > 0:
              DA.I += 2 # If a reward was recieved give DA
           else :
               DA.I = 0          
@@ -984,15 +950,15 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    ThalamusNL.I = 0
    ThalamusWL.I = 0
    DA.I = 0
-   CortexL.I = 10
+   CortexL.I = 20
    CortexNL.I = 0
    run(sequence_duration,report='text')
    ThalamusL.I = 0
    ThalamusNL.I = 0
    ThalamusWL.I = 0
    DA.I = 0
-   CortexL.I = 10
-   CortexNL.I = 20
+   CortexL.I = 20
+   CortexNL.I = 40
    run(sequence_duration,report='text')
 
    figure()
@@ -1032,6 +998,10 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    STN_FR = mean(STNpop.smooth_rate(window='gaussian',width=binSize)/Hz)
    GPe_FR = mean(GPePop.smooth_rate(window='gaussian',width=binSize)/Hz)
    SNr_FR = mean(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz)
+   
+   STNemp = 10;
+   GPeEmp = 29;
+   SNrEmp = 26
 
    print 'STN'   
    print STN_FR
@@ -1039,27 +1009,6 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    print GPe_FR
    print 'SNr'
    print SNr_FR
-   
-#   STNall = np.array([14.618,13.013,14.024,20.206,13.85,14.824,15.69,12.855,16.5189,13.46,13.69])
-#   STNemp = 10
-#   SNrAll = np.array([21.319,17.072,20.4,13.57,21.969,25.59,23.7,17.103,24.948,19.40,21.876])
-#   SNrEmp = 26
-#  GPeAll = np.array([31.12,26.56,29.154,29.237,29.711,33.577,34.587,26.38144,36.989,27.649,27.98])
-#   GPeEmp =29
-
-#   def mean_confidence_interval(data, confidence=0.95):
-#        a = 1.0*np.array(data)
-#        n = len(a)
-#        m, se = np.mean(a), scipy.stats.sem(a)
-#        h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
-#        return m, m-h, m+h    
-    
-#   STN_95 = mean_confidence_interval(STNall)
-#   STN_95 = STN_95[2]-STN_95[1]
-#   SNr_95 = mean_confidence_interval(SNrAll)
-#   SNr_95 = SNr_95[2]-SNr_95[1]
-#   GPe_95 = mean_confidence_interval(GPeAll)
-#   GPe_95 = GPe_95[2]-GPe_95[1]
 
    figure()
    #plt.legend('STN','GPe','SNr')
@@ -1093,7 +1042,6 @@ if cortex_D1_action == 1:
     ThalamusPopL = PopulationRateMonitor(ThalamusL)
     ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
     ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
-    
     
     ThalamusL.I = 0
     ThalamusNL.I = 0
@@ -1134,7 +1082,6 @@ if cortex_D1_action == 1:
     title('Cortical Firing Rates')
     legend('R')
     
-    
     avg_D1L = np.mean(CortexL_D1L.w)
     avg_D1NL = np.mean(CortexNL_D1NL.w)
     avg_D1WL =  np.mean(CortexWL_D1WL.w)
@@ -1165,9 +1112,6 @@ if learnAction == 1:
     ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
     ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
     
-    #ThalamusL.I = 10
-    #ThalamusNL.I = 10
-    #ThalamusWL.I = 10
     CortexL.I = 5
     CortexNL.I = 5
     CortexWL.I = 5
