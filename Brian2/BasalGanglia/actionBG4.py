@@ -38,23 +38,25 @@ import matplotlib.pyplot as plt
 start_scope()
 
 # options
-synfire = 1
+synfire = 0
+SNr_collaterals = 0
 recordz = 0
 plotz = 0
 action_thresh = 10
 
+
 # Tests/ experiments to run 
 sequence = 0
-popFiring = 0
+popFiring = 1
 cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 1 # test to see if an action can be learned  
+learnAction = 0 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 8000*ms 
+learn_duration = 5000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -67,7 +69,7 @@ weight = 4.86*mV
 
 # Cortical-MSN plasticity
 MSN_High = -60
-SNr_thresh = 60*Hz 
+SNr_thresh = 25*Hz 
 
 #%%
 # Parameters
@@ -102,7 +104,7 @@ Apost = -Apre*taupre/taupost*1.05
 wScale = 1 # amount to scale weights by
 
 # MSN plasticity
-traceTau = traceTauPost = 50*ms  # this will change integration window # was 1200
+traceTau = traceTauPost = 20*ms  # this will change integration window # was 1200
 traceConstant = 0.01 # this will change maximum weight change
 tracePostConstant = -traceConstant*traceTau/traceTauPost*1.05
 
@@ -737,50 +739,51 @@ SNrWL_ThalamusWL.delay = 5*ms
 SNrWL_ThalamusWL.w = d
 
 # Collaterals 
-SNrL_SNrL = Synapses(SNrL,SNrL,weightEqs,on_pre=subW)
-SNrL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrL_SNrL.delay = 1*ms # Humphries, et al., 2006
-SNrL_SNrL.w = np.random.choice([s,p],len(SNrL_SNrL.i),p=[0.5,0.5])
-
-SNrL_SNrNL = Synapses(SNrL,SNrNL,weightEqs,on_pre=subW)
-SNrL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrL_SNrNL.delay = 1*ms # Humphries, et al., 2006
-SNrL_SNrNL.w = np.random.choice([s,p],len(SNrL_SNrNL.i),p=[0.5,0.5])
-
-SNrL_SNrWL = Synapses(SNrL,SNrWL,weightEqs,on_pre=subW)
-SNrL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrL_SNrWL.delay = 1*ms # Humphries, et al., 2006
-SNrL_SNrWL.w = np.random.choice([s,p],len(SNrL_SNrWL.i),p=[0.5,0.5])
-
-SNrNL_SNrL = Synapses(SNrNL,SNrL,weightEqs,on_pre=subW)
-SNrNL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrNL_SNrL.delay = 1*ms # Humphries, et al., 2006
-SNrNL_SNrL.w = np.random.choice([s,p],len(SNrNL_SNrL.i),p=[0.5,0.5])
-
-SNrNL_SNrNL = Synapses(SNrNL,SNrNL,weightEqs,on_pre=subW)
-SNrNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrNL_SNrNL.delay = 1*ms # Humphries, et al., 2006
-SNrNL_SNrNL.w = np.random.choice([s,p],len(SNrNL_SNrNL.i),p=[0.5,0.5])
-
-SNrNL_SNrWL = Synapses(SNrNL,SNrWL,weightEqs,on_pre=subW)
-SNrNL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrNL_SNrWL.delay = 1*ms # Humphries, et al., 2006
-SNrNL_SNrWL.w = np.random.choice([s,p],len(SNrNL_SNrWL.i),p=[0.5,0.5])
-
-SNrWL_SNrL = Synapses(SNrWL,SNrL,weightEqs,on_pre=subW)
-SNrWL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrWL_SNrL.delay = 1*ms # Humphries, et al., 2006
-SNrWL_SNrL.w = np.random.choice([s,p],len(SNrWL_SNrL.i),p=[0.5,0.5])
-
-SNrWL_SNrNL = Synapses(SNrWL,SNrNL,weightEqs,on_pre=subW)
-SNrWL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrWL_SNrNL.delay = 1*ms # Humphries, et al., 2006
-SNrWL_SNrNL.w = np.random.choice([s,p],len(SNrWL_SNrNL.i),p=[0.5,0.5])
-
-SNrWL_SNrWL = Synapses(SNrWL,SNrWL,weightEqs,on_pre=subW)
-SNrWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
-SNrWL_SNrWL.delay = 1*ms # Humphries, et al., 2006
-SNrWL_SNrWL.w = np.random.choice([s,p],len(SNrWL_SNrWL.i),p=[0.5,0.5])
+if  SNr_collaterals == 1:
+    SNrL_SNrL = Synapses(SNrL,SNrL,weightEqs,on_pre=subW)
+    SNrL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrL_SNrL.delay = 1*ms # Humphries, et al., 2006
+    SNrL_SNrL.w = np.random.choice([s,p],len(SNrL_SNrL.i),p=[0.5,0.5])
+    
+    SNrL_SNrNL = Synapses(SNrL,SNrNL,weightEqs,on_pre=subW)
+    SNrL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrL_SNrNL.delay = 1*ms # Humphries, et al., 2006
+    SNrL_SNrNL.w = np.random.choice([s,p],len(SNrL_SNrNL.i),p=[0.5,0.5])
+    
+    SNrL_SNrWL = Synapses(SNrL,SNrWL,weightEqs,on_pre=subW)
+    SNrL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrL_SNrWL.delay = 1*ms # Humphries, et al., 2006
+    SNrL_SNrWL.w = np.random.choice([s,p],len(SNrL_SNrWL.i),p=[0.5,0.5])
+    
+    SNrNL_SNrL = Synapses(SNrNL,SNrL,weightEqs,on_pre=subW)
+    SNrNL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrNL_SNrL.delay = 1*ms # Humphries, et al., 2006
+    SNrNL_SNrL.w = np.random.choice([s,p],len(SNrNL_SNrL.i),p=[0.5,0.5])
+    
+    SNrNL_SNrNL = Synapses(SNrNL,SNrNL,weightEqs,on_pre=subW)
+    SNrNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrNL_SNrNL.delay = 1*ms # Humphries, et al., 2006
+    SNrNL_SNrNL.w = np.random.choice([s,p],len(SNrNL_SNrNL.i),p=[0.5,0.5])
+    
+    SNrNL_SNrWL = Synapses(SNrNL,SNrWL,weightEqs,on_pre=subW)
+    SNrNL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrNL_SNrWL.delay = 1*ms # Humphries, et al., 2006
+    SNrNL_SNrWL.w = np.random.choice([s,p],len(SNrNL_SNrWL.i),p=[0.5,0.5])
+    
+    SNrWL_SNrL = Synapses(SNrWL,SNrL,weightEqs,on_pre=subW)
+    SNrWL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrWL_SNrL.delay = 1*ms # Humphries, et al., 2006
+    SNrWL_SNrL.w = np.random.choice([s,p],len(SNrWL_SNrL.i),p=[0.5,0.5])
+    
+    SNrWL_SNrNL = Synapses(SNrWL,SNrNL,weightEqs,on_pre=subW)
+    SNrWL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrWL_SNrNL.delay = 1*ms # Humphries, et al., 2006
+    SNrWL_SNrNL.w = np.random.choice([s,p],len(SNrWL_SNrNL.i),p=[0.5,0.5])
+    
+    SNrWL_SNrWL = Synapses(SNrWL,SNrWL,weightEqs,on_pre=subW)
+    SNrWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrWL_SNrWL.delay = 1*ms # Humphries, et al., 2006
+    SNrWL_SNrWL.w = np.random.choice([s,p],len(SNrWL_SNrWL.i),p=[0.5,0.5])
 
 ############ STN Projections 
 # STN to SNr
@@ -887,6 +890,24 @@ if learnAction == 1:
        return smooth_rate[len(smooth_rate)-1]*Hz
    
 
+#   def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
+#       DAind = np.where(SpikeMon2.t > (t - window)) 
+#       #SynapseMon.w = SynapseMon.w * 0.999
+#       if len(DAind[0]) > 5: # was DA released?
+#           CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+#           PresynapticInd = []
+#           for i in range(0,len(np.unique(CortexIndex))):
+#               pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+#               PresynapticInd.extend(pre[0])
+#          act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
+#           high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
+#           s2 = set(high_synaptic_ind) # set object for high_synpatic ind
+#          strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
+#           not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
+#           SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+#           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
+#           SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+           
    def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
        DAind = np.where(SpikeMon2.t > (t - window)) 
        #SynapseMon.w = SynapseMon.w * 0.999
@@ -901,27 +922,9 @@ if learnAction == 1:
            s2 = set(high_synaptic_ind) # set object for high_synpatic ind
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-           SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[strengthen_synapse] +=   1 
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
-           SynapseMon.w = clip(SynapseMon.w, 0, wmax)
-           
-#   def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
-#       DAind = np.where(SpikeMon2.t > (t - window)) 
-#       #SynapseMon.w = SynapseMon.w * 0.999
-#       if len(DAind[0]) > 5: # was DA released?
-#           CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-#           PresynapticInd = []
-#           for i in range(0,len(np.unique(CortexIndex))):
-#               pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-#               PresynapticInd.extend(pre[0])
-#           act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-#           high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-#           s2 = set(high_synaptic_ind) # set object for high_synpatic ind
-#           strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
-#           not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-#           SynapseMon.w[strengthen_synapse] +=   1 
-#           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
-#           SynapseMon.w = clip(SynapseMon.w, 0, wmax)        
+           SynapseMon.w = clip(SynapseMon.w, 0, wmax)        
 
 #network operations     
    rew_win=30*ms        
@@ -934,7 +937,7 @@ if learnAction == 1:
        if action[0] == 0:
           if SNrL_rate < SNr_thresh:
                #if ThalamusL.I[0] > 0:
-             DA.I += 5 # If a reward was recieved give DA
+             DA.I += 2 # If a reward was recieved give DA
           else :
               DA.I = 0          
        else:
