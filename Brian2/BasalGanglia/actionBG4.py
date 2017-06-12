@@ -790,33 +790,33 @@ if  SNr_collaterals == 1:
 STN_SNrL = Synapses(STN,SNrL,weightEqs,on_pre=addW)
 STN_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
 STN_SNrL.delay = 1.5*ms # Humphries, et al., 2006 
-STN_SNrL.w = d
+STN_SNrL.w = p
 
 STN_SNrNL = Synapses(STN,SNrNL,weightEqs,on_pre=addW)
 STN_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
 STN_SNrNL.delay = 1.5*ms # Humphries, et al., 2006 
-STN_SNrNL.w = d
+STN_SNrNL.w = p
 
 STN_SNrWL = Synapses(STN,SNrWL,weightEqs,on_pre=addW)
 STN_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
 STN_SNrWL.delay = 1.5*ms # Humphries, et al., 2006 
-STN_SNrWL.w = d
+STN_SNrWL.w = p
 
 # Excitatory STN to GPe
 STN_GPe_L = Synapses(STN,GPe_L,weightEqs,on_pre=addW)
 STN_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_L.delay = 2*ms # Humphries, et al., 2006 
-STN_GPe_L.w = d # Humphries, et al., 2006... 
+STN_GPe_L.w = p # Humphries, et al., 2006... 
 
 STN_GPe_NL = Synapses(STN,GPe_NL,weightEqs,on_pre=addW)
 STN_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_NL.delay = 2*ms # Humphries, et al., 2006 
-STN_GPe_NL.w = d # Humphries, et al., 2006... 
+STN_GPe_NL.w = p # Humphries, et al., 2006... 
 
 STN_GPe_WL = Synapses(STN,GPe_WL,weightEqs,on_pre=addW)
 STN_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)  
 STN_GPe_WL.delay = 2*ms # Humphries, et al., 2006 
-STN_GPe_WL.w = d # Humphries, et al., 2006... 
+STN_GPe_WL.w = p # Humphries, et al., 2006... 
 
 ############ Thalamus Projections 
 
@@ -1040,35 +1040,32 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    print 'SNr'
    print SNr_FR
    
-   STNall = np.array([14.618,13.013,14.024,20.206,13.85,14.824,15.69,12.855,16.5189,13.46,13.69])
-   STNemp = 10
-   SNrAll = np.array([21.319,17.072,20.4,13.57,21.969,25.59,23.7,17.103,24.948,19.40,21.876])
-   SNrEmp = 26
-   GPeAll = np.array([31.12,26.56,29.154,29.237,29.711,33.577,34.587,26.38144,36.989,27.649,27.98])
-   GPeEmp =29
+#   STNall = np.array([14.618,13.013,14.024,20.206,13.85,14.824,15.69,12.855,16.5189,13.46,13.69])
+#   STNemp = 10
+#   SNrAll = np.array([21.319,17.072,20.4,13.57,21.969,25.59,23.7,17.103,24.948,19.40,21.876])
+#   SNrEmp = 26
+#  GPeAll = np.array([31.12,26.56,29.154,29.237,29.711,33.577,34.587,26.38144,36.989,27.649,27.98])
+#   GPeEmp =29
 
-   def mean_confidence_interval(data, confidence=0.95):
-        a = 1.0*np.array(data)
-        n = len(a)
-        m, se = np.mean(a), scipy.stats.sem(a)
-        h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
-        return m, m-h, m+h    
+#   def mean_confidence_interval(data, confidence=0.95):
+#        a = 1.0*np.array(data)
+#        n = len(a)
+#        m, se = np.mean(a), scipy.stats.sem(a)
+#        h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
+#        return m, m-h, m+h    
     
-   STN_95 = mean_confidence_interval(STNall)
-   STN_95 = STN_95[2]-STN_95[1]
-   SNr_95 = mean_confidence_interval(SNrAll)
-   SNr_95 = SNr_95[2]-SNr_95[1]
-   GPe_95 = mean_confidence_interval(GPeAll)
-   GPe_95 = GPe_95[2]-GPe_95[1]
+#   STN_95 = mean_confidence_interval(STNall)
+#   STN_95 = STN_95[2]-STN_95[1]
+#   SNr_95 = mean_confidence_interval(SNrAll)
+#   SNr_95 = SNr_95[2]-SNr_95[1]
+#   GPe_95 = mean_confidence_interval(GPeAll)
+#   GPe_95 = GPe_95[2]-GPe_95[1]
 
    figure()
    #plt.legend('STN','GPe','SNr')
-   plt.plot(1,np.mean(STNall),'ob')
-   plt.plot(2,np.mean(GPeAll),'ob')
-   plt.plot(3,np.mean(SNrAll),'ob')
-   plt.errorbar(1,np.mean(STNall),STN_95,capsize=10, elinewidth=4)
-   plt.errorbar(2,np.mean(GPeAll),GPe_95,capsize=10, elinewidth=4)
-   plt.errorbar(3,np.mean(SNrAll),SNr_95,capsize=10, elinewidth=4)
+   plt.plot(1,STN_FR,'ob')
+   plt.plot(2,GPe_FR,'ob')
+   plt.plot(3,SNr_FR,'ob')
    plt.plot(1,STNemp,'g+',mew=10, ms=20)
    plt.plot(2,GPeEmp,'g+', mew=10, ms=20)
    plt.plot(3,SNrEmp,'g+', mew=10, ms=20)
