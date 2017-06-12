@@ -45,16 +45,16 @@ plotz = 0
 action_thresh = 10
 
 # Tests/ experiments to run 
-sequence = 1
+sequence = 0
 popFiring = 0
 cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 0 # test to see if an action can be learned  
+learnAction = 1 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 5000*ms 
+learn_duration = 500000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -623,17 +623,17 @@ D1_SNrWL.w = s # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
 
 # D2 
 D2_L_GPe_L = Synapses(D2_L,GPe_L,weightEqs,on_pre=subW)
-D2_L_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+D2_L_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.8', skip_if_invalid=True)
 D2_L_GPe_L.delay = 5*ms # Humphries, et al., 2006 
 D2_L_GPe_L.w = np.random.choice([s,p,d],len(D2_L_GPe_L.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
 D2_NL_GPe_NL = Synapses(D2_NL,GPe_NL,weightEqs,on_pre=subW)
-D2_NL_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+D2_NL_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.8', skip_if_invalid=True)
 D2_NL_GPe_NL.delay = 5*ms # Humphries, et al., 2006 
 D2_NL_GPe_NL.w = np.random.choice([s,p,d],len(D2_NL_GPe_NL.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
 D2_WL_GPe_WL = Synapses(D2_WL,GPe_WL,weightEqs,on_pre=subW)
-D2_WL_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+D2_WL_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.8', skip_if_invalid=True)
 D2_WL_GPe_WL.delay = 5*ms # Humphries, et al., 2006 
 D2_WL_GPe_WL.w = np.random.choice([s,p,d],len(D2_WL_GPe_WL.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
@@ -950,15 +950,15 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    ThalamusNL.I = 0
    ThalamusWL.I = 0
    DA.I = 0
-   CortexL.I = 20
+   CortexL.I = 10
    CortexNL.I = 0
    run(sequence_duration,report='text')
    ThalamusL.I = 0
    ThalamusNL.I = 0
    ThalamusWL.I = 0
    DA.I = 0
-   CortexL.I = 20
-   CortexNL.I = 40
+   CortexL.I = 10
+   CortexNL.I = 20
    run(sequence_duration,report='text')
 
    figure()
