@@ -46,9 +46,9 @@ action_thresh = 10
 
 # Tests/ experiments to run 
 sequence = 0
-popFiring = 0
+popFiring = 1
 cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 1 # test to see if an action can be learned  
+learnAction = 0 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 # variables 
@@ -69,6 +69,12 @@ weight = 4.86*mV
 MSN_High = -60
 SNr_thresh = 25*Hz 
 
+# MSN-GP
+MSN_GP = 1 # this is the connectivity between D1-SNr and D2-GPe 
+#lindhal et al., 2013 suggests the connectivity should be the same 
+
+# MSN 
+convergance_scale = 3 # how much to scale D1 to SNr inputs. This will account for convergance
 #%%
 # Parameters
 
@@ -607,33 +613,33 @@ DA_D2WL.w = s#rand(len(DA_D1WL.i))
 ############ Striatal Projections 
 # D1 
 D1_SNrL = Synapses(D1_L,SNrL,weightEqs,on_pre=subW)
-D1_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
+D1_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrL.w = s # Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+D1_SNrL.w = s * convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrL.i))
 
 D1_SNrNL = Synapses(D1_NL,SNrNL,weightEqs,on_pre=subW)
-D1_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
+D1_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrNL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrNL.w = s # Humphries, et al., 2006  #rand(len(D1_SNrNL.i))
+D1_SNrNL.w = s * convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrNL.i))
 
 D1_SNrWL = Synapses(D1_WL,SNrWL,weightEqs,on_pre=subW)
-D1_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
+D1_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrWL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrWL.w = s # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
+D1_SNrWL.w = s * convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
 
 # D2 
 D2_L_GPe_L = Synapses(D2_L,GPe_L,weightEqs,on_pre=subW)
-D2_L_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.8', skip_if_invalid=True)
+D2_L_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True) # Lindhal et al., 2013 suggest keeping D1-SNr and D2-GPe the same 
 D2_L_GPe_L.delay = 5*ms # Humphries, et al., 2006 
 D2_L_GPe_L.w = np.random.choice([s,p,d],len(D2_L_GPe_L.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
 D2_NL_GPe_NL = Synapses(D2_NL,GPe_NL,weightEqs,on_pre=subW)
-D2_NL_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.8', skip_if_invalid=True)
+D2_NL_GPe_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D2_NL_GPe_NL.delay = 5*ms # Humphries, et al., 2006 
 D2_NL_GPe_NL.w = np.random.choice([s,p,d],len(D2_NL_GPe_NL.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
 D2_WL_GPe_WL = Synapses(D2_WL,GPe_WL,weightEqs,on_pre=subW)
-D2_WL_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.8', skip_if_invalid=True)
+D2_WL_GPe_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D2_WL_GPe_WL.delay = 5*ms # Humphries, et al., 2006 
 D2_WL_GPe_WL.w = np.random.choice([s,p,d],len(D2_WL_GPe_WL.i),p=[0.33,0.33,0.34]) # Humphries, et al., 2006 
 
@@ -641,17 +647,17 @@ D2_WL_GPe_WL.w = np.random.choice([s,p,d],len(D2_WL_GPe_WL.i),p=[0.33,0.33,0.34]
 
 # GPe SNR
 GPeL_SNrL = Synapses(GPe_L,SNrL,weightEqs,on_pre=subW)
-GPeL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True) 
+GPeL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True) 
 GPeL_SNrL.delay = 3*ms # Humphries, et al., 2006 
 GPeL_SNrL.w = np.random.choice([s,p],len(GPeL_SNrL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
 GPeNL_SNrNL = Synapses(GPe_NL,SNrNL,weightEqs,on_pre=subW)
-GPeNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True) 
+GPeNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True) 
 GPeNL_SNrNL.delay = 3*ms # Humphries, et al., 2006 
 GPeNL_SNrNL.w = np.random.choice([s,p],len(GPeNL_SNrNL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
 GPeWL_SNrWL = Synapses(GPe_WL,SNrWL,weightEqs,on_pre=subW)
-GPeWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True) 
+GPeWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True) 
 GPeWL_SNrWL.delay = 3*ms # Humphries, et al., 2006 
 GPeWL_SNrWL.w = np.random.choice([s,p],len(GPeWL_SNrWL.i),p=[0.5,0.5]) # Humphries, et al., 2006 
 
@@ -931,6 +937,7 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    WrongActionPop = PopulationRateMonitor(WrongLeverPress)
    CortexPop = PopulationRateMonitor(CortexL)
    D1pop = PopulationRateMonitor(D1_L)
+   D1_NLpop = PopulationRateMonitor(D1_NL)
    GPePop = PopulationRateMonitor(GPe_L)
    SNrPop = PopulationRateMonitor(SNrL)
    SNrPopNL = PopulationRateMonitor(SNrNL)
@@ -940,18 +947,18 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
    ThalamusPopWL = PopulationRateMonitor(ThalamusWL) 
    
-   ThalamusL.I = 0
-   ThalamusNL.I = 0
-   ThalamusWL.I = 0
+   # Run the "baseline" recording
    DA.I = 0
-   CortexL.I = 0
+   CortexL.I = 5
+   CortexNL.I = 5
+   CortexWL.I = 5
    run(sequence_duration,report='text')
-   ThalamusL.I = 0
-   ThalamusNL.I = 0
-   ThalamusWL.I = 0
+   
+   # Run the "pick lever" recording
    DA.I = 0
    CortexL.I = 10
-   CortexNL.I = 0
+   CortexNL.I = 5
+   CortexWL.I = 5
    run(sequence_duration,report='text')
    ThalamusL.I = 0
    ThalamusNL.I = 0
@@ -959,6 +966,7 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    DA.I = 0
    CortexL.I = 10
    CortexNL.I = 20
+   CortexWL.I = 5
    run(sequence_duration,report='text')
 
    figure()
@@ -981,9 +989,10 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    
    figure() 
    plot(D1pop.t/ms,D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(D1_NLpop.t/ms,D1_NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
    xlabel('Time(ms)')
    ylabel('Firing Rate')
-
+   legend('RU')
 
 if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006   
    # population activity
