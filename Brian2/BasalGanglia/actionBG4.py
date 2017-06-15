@@ -34,9 +34,10 @@ import numpy as np
 import scipy as sp
 import scipy.stats
 import matplotlib.pyplot as plt
-#prefs.codegen.target = 'weave'
-start_scope()
 
+prefs.codegen.target = 'numpy'
+
+start_scope()
 # options
 synfire = 0
 SNr_collaterals = 0
@@ -54,7 +55,7 @@ test_DA = 0 # test to look at DA firing
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 3000*ms#500000*ms 
+learn_duration = 5000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -67,7 +68,6 @@ weight = 4.86*mV
 
 #%%
 # Parameters
-
 n = 10 # number of neurons
 w2 = n # for connectivity
 numChannels = 3 # the number of action channels... to scale STN and GPe 
@@ -864,23 +864,23 @@ if learnAction == 1:
        return smooth_rate[len(smooth_rate)-1]*Hz
    
 
-#   def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
-#       DAind = np.where(SpikeMon2.t > (t - window)) 
-#       #SynapseMon.w = SynapseMon.w * 0.999
-#       if len(DAind[0]) > 5: # was DA released?
-#           CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
-#           PresynapticInd = []
-#           for i in range(0,len(np.unique(CortexIndex))):
-#               pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
-#               PresynapticInd.extend(pre[0])
-#          act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
-#           high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
-#           s2 = set(high_synaptic_ind) # set object for high_synpatic ind
-#          strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
-#           not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-#           SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
-#           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
-#           SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+   def complex_DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
+       DAind = np.where(SpikeMon2.t > (t - window)) 
+       #SynapseMon.w = SynapseMon.w * 0.999
+       if len(DAind[0]) > 5: # was DA released?
+           CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+           PresynapticInd = []
+           for i in range(0,len(np.unique(CortexIndex))):
+               pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+               PresynapticInd.extend(pre[0])
+           act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
+           high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
+           s2 = set(high_synaptic_ind) # set object for high_synpatic ind
+           strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
+           not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
+           SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
+           SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
    def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
        DAind = np.where(SpikeMon2.t > (t - window)) 
@@ -1037,8 +1037,20 @@ if popFiring == 1: # reproduce figure 2 in Humphries et al., 2006
    print 'Population Firing Results'
    
    if (STN_FR > 8) & (STN_FR < 14):
-      print 
+      print 'STN firing rate passed test'
+   else:
+      print 'ERROR!! STN firing rate not reasonable'
+      
+   if (GPe_FR > 26) & (GPe_FR < 36):
+       print 'GPe firing rate passed test'
+   else:
+      print 'ERROR!! GPe firing rate not reasonable'       
 
+   if (SNr_FR > 21) & (SNr_FR < 32):
+       print 'SNr firing rate passed test'
+   else:
+      print 'ERROR!! SNr firing rate not reasonable'           
+      
 if cortex_D1_action == 1:
     # population monitors 
     ActionPop = PopulationRateMonitor(LeverPress)
@@ -1129,11 +1141,11 @@ if learnAction == 1:
     CortexWL.I = 5
     run(learn_duration,report='text')
     
-    ## Compare population monitor to online smoothing 
+    ##Compare population monitor to online smoothing 
     SNrL_binnedFR = [] 
     SNrNL_binnedFR = []  
     SNrWL_binnedFR = []       
-    for i in np.arange(0,learn_duration/ms,rew_win):
+    for i in np.arange(integration_window/ms,learn_duration/ms,rew_win/ms):
         SNrL_FR = calculate_FR(SNrLspikes,integration_window,i*ms)       
         SNrL_binnedFR.append(SNrL_FR)     
         SNrNL_FR = calculate_FR(SNrNLspikes,integration_window,i*ms)       
@@ -1145,6 +1157,7 @@ if learnAction == 1:
     plot(SNrL_binnedFR)
     plot(SNrNL_binnedFR)
     plot(SNrWL_binnedFR)
+    plot(np.ones(len(SNrL_binnedFR))*SNr_thresh,'k--')
     legend('R2U')
     title('Online Calculation of SNr Firing rates')    
     
@@ -1181,7 +1194,6 @@ if learnAction == 1:
     ylabel('Firing Rate')
     title('DA Firing Rates')
     
-    
     figure()
     plot(CortexLpop.t/ms,CortexLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
     plot(CortexNLpop.t/ms,CortexNLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
@@ -1200,8 +1212,6 @@ if learnAction == 1:
     title('D1 Firing Rates')
     legend('R2U')   
     
-
-
 
 if synfire == 1:
    Mgp = SpikeMonitor(CortexL) 
