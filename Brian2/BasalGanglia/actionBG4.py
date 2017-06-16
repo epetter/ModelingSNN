@@ -854,6 +854,12 @@ if recordz == 1:
 win = [0.25, 0.25, 0.5]
 
 if learnAction == 1: 
+    
+   # independent E/I Poisson inputs
+   p1 = PoissonInput(CortexL, 'v', N=5, rate=10*Hz, weight=d)
+   p2 = PoissonInput(CortexNL, 'v', N=5, rate=10*Hz, weight=d)
+   p3 = PoissonInput(CortexWL, 'v', N=5, rate=10*Hz, weight=d)
+
    def calculate_FR(spike_monitor,integration_window,t): 
        bin_edges = np.arange((t-integration_window)/ms,t/ms,integration_window/4/ms)
        all_rates = []
@@ -909,7 +915,7 @@ if learnAction == 1:
        SNrWL_rate = calculate_FR(SNrWLspikes,integration_window,t)
        #action = np.where(np.min([SNrL_rate,SNrNL_rate,SNrWL_rate]))
        if SNrL_rate < SNr_thresh:
-          DA.I += 2 # If a reward was recieved give DA
+          DA.I += 4 # If a reward was recieved give DA
        else :
             DA.I = 0          
            
@@ -1136,9 +1142,9 @@ if learnAction == 1:
     ThalamusPopNL = PopulationRateMonitor(ThalamusNL)
     ThalamusPopWL = PopulationRateMonitor(ThalamusWL)  
     
-    CortexL.I = 5
-    CortexNL.I = 5
-    CortexWL.I = 5
+    #CortexL.I = 5
+    #CortexNL.I = 5
+    #ortexWL.I = 5
     run(learn_duration,report='text')
     
     ##Compare population monitor to online smoothing 
