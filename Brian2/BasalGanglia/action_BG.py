@@ -43,10 +43,7 @@ start_scope()
 synfire = 0
 SNr_collaterals = 0
 
-# Tests/ experiments to run 
-testz = 0
-
-learnAction = 0 # test to see if an action can be learned  
+learnAction = 1 # test to see if an action can be learned  
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
@@ -70,10 +67,10 @@ a0 = 0.02
 d0 = 0.05
 
 # RS Iz
-c = -66#-66*mV
-b= 0.2#0.2/ms 
-a = 0.02#0.02/ms
-d = 8#8*mV/ms
+c = -66
+b= 0.2 
+a = 0.02
+d = 8
 
 # FS Iz
 c2 = -66
@@ -88,7 +85,7 @@ weight = 4.86*mV
 
 # STDP variables
 taupre = taupost = 20*ms
-wmax = 50 # weights can go from 0 to 1
+wmax = 150 # weights can go from 0 to 1
 Apre = 0.01
 Apost = -Apre*taupre/taupost*1.05
 wScale = 1 # amount to scale weights by
@@ -108,11 +105,12 @@ integration_window = 100*ms
 
 # Cortical-MSN plasticity
 MSN_High = -60
-SNr_thresh = 25*Hz 
+SNr_thresh = 20*Hz 
 
 # MSN-GP
 MSN_GP = 1 # this is the connectivity between D1-SNr and D2-GPe 
 #lindhal et al., 2013 suggests the connectivity should be the same 
+CortexD1_start = 50
 
 striatum_scale = 10 # how much to scale MSN numbers to GP/SNr inputs. This will account for convergance
 
@@ -519,18 +517,18 @@ CortexWL_WrongLever.delay = 15*ms
 CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
-CortexLD1start = s#*rand(len(CortexL_D1L.i))
-CortexL_D1L.w = CortexLD1start #rand(len(Cortex_D1.i))
+CortexLD1start = CortexD1_start#*rand(len(CortexL_D1L.i))
+CortexL_D1L.w = CortexD1_start #rand(len(Cortex_D1.i))
 
 CortexNL_D1NL = Synapses(CortexNL,D1_NL,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexNL_D1NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexNL_D1NL.delay = 10*ms # Humphries, et al., 2006 
-CortexNL_D1NL.w = s#s*rand(len(CortexNL_D1NL.i))
+CortexNL_D1NL.w = CortexD1_start#s*rand(len(CortexNL_D1NL.i))
 
 CortexWL_D1WL = Synapses(CortexWL,D1_WL,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexWL_D1WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
 CortexWL_D1WL.delay = 10*ms # Humphries, et al., 2006 
-CortexWL_D1WL.w = s#s*rand(len(CortexWL_D1WL.i))
+CortexWL_D1WL.w = CortexD1_start #s*rand(len(CortexWL_D1WL.i))
 
 # Cortex D2 
 CortexL_D2 = Synapses(CortexL,D2_L,weightEqs,on_pre=addW) #on_pre='v=+10')
@@ -567,34 +565,34 @@ CortexWL_STN.w = d
 ############ DopaminergicProjections 
 # DA projections to D1
 DA_D1L = Synapses(DA,D1_L,DAstdp,on_pre=onpreDA_D1,on_post=onpostDA)
-DA_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
+DA_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True) 
 DA_D1L.delay = 5*ms
 DA_D1L.w = s#rand(len(DA_D1L.i))
 
 DA_D1NL = Synapses(DA,D1_NL,DAstdp,on_pre=onpreDA_D1,on_post=onpostDA)
-DA_D1NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
+DA_D1NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True) 
 DA_D1NL.delay = 5*ms
 DA_D1NL.w = s#rand(len(DA_D1NL.i))
 
 DA_D1WL = Synapses(DA,D1_WL,DAstdp,on_pre=onpreDA_D1,on_post=onpostDA)
-DA_D1WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
+DA_D1WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True) 
 DA_D1WL.delay = 5*ms
 DA_D1WL.w = s#rand(len(DA_D1WL.i))
 
 
 # DA projections to D1
 DA_D2L = Synapses(DA,D2_L,DAstdp,on_pre=onpreDA_D2,on_post=onpostDA)
-DA_D2L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
+DA_D2L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True) 
 DA_D2L.delay = 5*ms
 DA_D2L.w = s#rand(len(DA_D1L.i))
 
 DA_D2NL = Synapses(DA,D2_NL,DAstdp,on_pre=onpreDA_D2,on_post=onpostDA)
-DA_D2NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
+DA_D2NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True) 
 DA_D2NL.delay = 5*ms
 DA_D2NL.w = s#rand(len(DA_D1NL.i))
 
 DA_D2WL = Synapses(DA,D2_WL,DAstdp,on_pre=onpreDA_D2,on_post=onpostDA)
-DA_D2WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.75', skip_if_invalid=True) 
+DA_D2WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.3', skip_if_invalid=True) 
 DA_D2WL.delay = 5*ms
 DA_D2WL.w = s#rand(len(DA_D1WL.i))
 
@@ -857,7 +855,7 @@ if learnAction == 1:
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
            SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
-           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
+           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
    def DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
@@ -875,7 +873,7 @@ if learnAction == 1:
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
            SynapseMon.w[strengthen_synapse] +=   1 
-           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - s)/np.abs(SynapseMon.w[not_strengthen_synapse]/s)
+           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)        
 
 #network operations     
@@ -887,7 +885,7 @@ if learnAction == 1:
        SNrWL_rate = calculate_FR(SNrWLspikes,integration_window,t)
        #action = np.where(np.min([SNrL_rate,SNrNL_rate,SNrWL_rate]))
        if SNrL_rate < SNr_thresh:
-          DA.I += 4 # If a reward was recieved give DA
+          DA.I += 2 # If a reward was recieved give DA
        else :
             DA.I = 0          
            
@@ -919,7 +917,7 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    SNrPopWL = PopulationRateMonitor(SNrWL)
    
    ta_CortexL = TimedArray([5,10,10],dt=sequence_duration)
-   ta_CortexNL = TimedArray([5,5,20],dt=sequence_duration)
+   ta_CortexNL = TimedArray([5,5,40],dt=sequence_duration)
    ta_CortexWL = TimedArray([5,5,5],dt=sequence_duration)
   
    @network_operation(dt=sequence_duration)
@@ -953,7 +951,8 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    plot(D1popWL.t/ms,D1popWL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
    xlabel('Time(ms)')
    ylabel('Firing Rate')
-   legend('RU')
+   title('D1 pop firing rates')
+   legend('R2U')
 
 def pop_firing(): # reproduce figure 2 in Humphries et al., 2006   
    # population activity
@@ -961,7 +960,7 @@ def pop_firing(): # reproduce figure 2 in Humphries et al., 2006
    SNrPop = PopulationRateMonitor(SNrL)
    STNpop = PopulationRateMonitor(STN)
    
-   run (pop_duration,report='text',report_period=1*second) 
+   run (pop_duration,report='text',report_period=10*second) 
 
    STN_FR = mean(STNpop.smooth_rate(window='gaussian',width=binSize)/Hz)
    GPe_FR = mean(GPePop.smooth_rate(window='gaussian',width=binSize)/Hz)
@@ -1011,7 +1010,7 @@ def pop_firing(): # reproduce figure 2 in Humphries et al., 2006
       print 'ERROR!! SNr firing rate not reasonable'           
       
 def cortex_D1_action():
-    CortexL_D1L.w = 30 # overwriting starting weights 
+    CortexL_D1L.w = 60 # overwriting starting weights 
     
     # population monitors 
     ActionPop = PopulationRateMonitor(LeverPress)
@@ -1025,9 +1024,6 @@ def cortex_D1_action():
     SNrPopNL = PopulationRateMonitor(SNrNL)
     SNrPopWL = PopulationRateMonitor(SNrWL)
     
-    ThalamusL.I = 0
-    ThalamusNL.I = 0
-    ThalamusWL.I = 0
     CortexL.I = 5
     CortexNL.I = 5
     CortexWL.I = 5
@@ -1083,14 +1079,14 @@ def cortex_D1_action():
     
     actions = [L_actions, NL_actions, WL_actions]
     
-    if np.where(actions == np.min(actions))[0] == 0:
+    avg_FR = [avg_D1L,avg_D1NL,avg_D1WL]
+    if np.where(actions == np.min(avg_FR))[0] == 0:
        print 'cortex_D1_action test passed!!'
     else:
        print 'cortex_D1_action test FAILED!!'
        
     return actions 
     
-
 if learnAction == 1:
     # Population monitors     
     ActionPop = PopulationRateMonitor(LeverPress)
@@ -1259,13 +1255,7 @@ def test_DA():
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('DA Firing Rates')
-  
-   
-if testz == 1:  
-   pop_firing()
-   sequence()
-   cortex_D1_action()
-   test_DA()
+
    
 # will only work when run from the command line 
 if __name__ == '__main__':
