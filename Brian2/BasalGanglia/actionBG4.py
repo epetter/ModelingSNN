@@ -48,14 +48,14 @@ action_thresh = 10
 # Tests/ experiments to run 
 sequence = 0
 popFiring = 0
-cortex_D1_action = 0 # a test to see if increased Cortex D1 strength can choose an action 
-learnAction = 1 # test to see if an action can be learned  
+cortex_D1_action = 1 # a test to see if increased Cortex D1 strength can choose an action 
+learnAction = 0 # test to see if an action can be learned  
 test_DA = 0 # test to look at DA firing 
 
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 5000*ms 
+learn_duration = 500000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -118,8 +118,7 @@ SNr_thresh = 25*Hz
 MSN_GP = 1 # this is the connectivity between D1-SNr and D2-GPe 
 #lindhal et al., 2013 suggests the connectivity should be the same 
 
-# MSN 
-convergance_scale = 3 # how much to scale D1 to SNr inputs. This will account for convergance
+striatum_scale = 3 # how much to scale MSN numbers to GP/SNr inputs. This will account for convergance
 
 #%% Equations 
 ############ Neuron Eqs
@@ -326,33 +325,33 @@ elif synfire == 1:
                              
 ############ Striatal Neurons  
 # D1 
-D1_L = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
+D1_L = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
 D1_L.v = c
 D1_L.u = b*c
 
-D1_NL = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
+D1_NL = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
 D1_NL.v = c
 D1_NL.u = b*c
 
-D1_WL = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
+D1_WL = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
 D1_WL.v = c
 D1_WL.u = b*c
 
 # D2
-D2_L = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
+D2_L = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
 D2_L.v = c
 D2_L.u = b*c 
 
-D2_NL = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
+D2_NL = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
 D2_NL.v = c
 D2_NL.u = b*c 
 
-D2_WL = NeuronGroup(n*2,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
+D2_WL = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
 D2_WL.v = c
 D2_WL.u = b*c 
@@ -458,27 +457,27 @@ NoPress_InhWL.connect(condition='i!=j',p=1,skip_if_invalid=True)
 NoPress_InhWL.delay = 2*ms
 
 # Inhibitory Interneuron
-InhWLPress = Synapses(InhInterWL,LeverPress,on_pre='v=-20')
+InhWLPress = Synapses(InhInterWL,LeverPress,on_pre='v-=20')
 InhWLPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
 InhWLPress.delay = 1*ms
 
-InhNLPress = Synapses(InhInterNL,LeverPress,on_pre='v=-20')
+InhNLPress = Synapses(InhInterNL,LeverPress,on_pre='v-=20')
 InhNLPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
 InhNLPress.delay = 1*ms
 
-InhLWrongPress = Synapses(InhInterL,WrongLeverPress,on_pre='v=-20')
+InhLWrongPress = Synapses(InhInterL,WrongLeverPress,on_pre='v-=20')
 InhLWrongPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
 InhLWrongPress.delay = 1*ms
 
-InhNLWrongPress = Synapses(InhInterNL,WrongLeverPress,on_pre='v=-20')
+InhNLWrongPress = Synapses(InhInterNL,WrongLeverPress,on_pre='v-=20')
 InhNLWrongPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
 InhNLWrongPress.delay = 1*ms
 
-InhLNoPress = Synapses(InhInterL,NoLeverPress,on_pre='v=-20')
+InhLNoPress = Synapses(InhInterL,NoLeverPress,on_pre='v-=20')
 InhLNoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
 InhLNoPress.delay = 1*ms
 
-InhWLNoPress = Synapses(InhInterWL,NoLeverPress,on_pre='v=-20')
+InhWLNoPress = Synapses(InhInterWL,NoLeverPress,on_pre='v-=20')
 InhWLNoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
 InhWLNoPress.delay = 1*ms
 
@@ -616,17 +615,17 @@ DA_D2WL.w = s#rand(len(DA_D1WL.i))
 D1_SNrL = Synapses(D1_L,SNrL,weightEqs,on_pre=subW)
 D1_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrL.w = s * convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+D1_SNrL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
 
 D1_SNrNL = Synapses(D1_NL,SNrNL,weightEqs,on_pre=subW)
 D1_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrNL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrNL.w = s * convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrNL.i))
+D1_SNrNL.w = s #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrNL.i))
 
 D1_SNrWL = Synapses(D1_WL,SNrWL,weightEqs,on_pre=subW)
 D1_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrWL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrWL.w = s * convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
+D1_SNrWL.w = s #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
 
 # D2 
 D2_L_GPe_L = Synapses(D2_L,GPe_L,weightEqs,on_pre=subW)
@@ -665,17 +664,17 @@ GPeWL_SNrWL.w = np.random.choice([s,p],len(GPeWL_SNrWL.i),p=[0.5,0.5]) # Humphri
 # GPe to STN; Inhibitory
 GPe_L_STN = Synapses(GPe_L,STN,weightEqs,subW)
 GPe_L_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-GPe_L_STN.delay = 4*ms # Humphries, et al., 2006 
+GPe_L_STN.delay = 5*ms # Lindahl et al., 2013 
 GPe_L_STN.w = np.random.choice([s,p,d],len(GPe_L_STN.i),p=[0.3,0.4,0.3]) # Humphries, et al., 2006  #rand(len(GPe_STN.i))
 
 GPe_NL_STN = Synapses(GPe_NL,STN,weightEqs,subW)
 GPe_NL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-GPe_NL_STN.delay = 4*ms # Humphries, et al., 2006 
+GPe_NL_STN.delay = 5*ms # Lindahl et al., 2013 
 GPe_NL_STN.w = np.random.choice([s,p,d],len(GPe_NL_STN.i),p=[0.3,0.4,0.3]) # Humphries, et al., 2006  #rand(len(GPe_STN.i))
 
 GPe_WL_STN = Synapses(GPe_WL,STN,weightEqs,subW)
 GPe_WL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-GPe_WL_STN.delay = 4*ms # Humphries, et al., 2006 
+GPe_WL_STN.delay = 5*ms # Lindahl et al., 2013 
 GPe_WL_STN.w = np.random.choice([s,p,d],len(GPe_WL_STN.i),p=[0.3,0.4,0.3]) # Humphries, et al., 2006  #rand(len(GPe_STN.i))
 
 ############ Poisson Projections 
@@ -856,9 +855,9 @@ win = [0.25, 0.25, 0.5]
 if learnAction == 1: 
     
    # independent E/I Poisson inputs
-   p1 = PoissonInput(CortexL, 'v', N=5, rate=10*Hz, weight=d)
-   p2 = PoissonInput(CortexNL, 'v', N=5, rate=10*Hz, weight=d)
-   p3 = PoissonInput(CortexWL, 'v', N=5, rate=10*Hz, weight=d)
+   p1 = PoissonInput(CortexL, 'v', N=6, rate=10*Hz, weight=s*2.5)
+   p2 = PoissonInput(CortexNL, 'v', N=6, rate=10*Hz, weight=s*2.5)
+   p3 = PoissonInput(CortexWL, 'v', N=6, rate=10*Hz, weight=s*2.5)
 
    def calculate_FR(spike_monitor,integration_window,t): 
        bin_edges = np.arange((t-integration_window)/ms,t/ms,integration_window/4/ms)
@@ -966,9 +965,6 @@ if sequence == 1:  # reproduce figure 3 in humphries et al., 2006
    CortexNL.I = 5
    CortexWL.I = 5
    run(sequence_duration,report='text')
-   ThalamusL.I = 0
-   ThalamusNL.I = 0
-   ThalamusWL.I = 0
    DA.I = 0
    CortexL.I = 10
    CortexNL.I = 20
@@ -1063,7 +1059,9 @@ if cortex_D1_action == 1:
     NoActionPop = PopulationRateMonitor(NoLeverPress)
     WrongActionPop = PopulationRateMonitor(WrongLeverPress)
     CortexPop = PopulationRateMonitor(CortexL)
-    D1pop = PopulationRateMonitor(D1_L)
+    D1Lpop = PopulationRateMonitor(D1_L)
+    D1NLpop = PopulationRateMonitor(D1_NL)
+    D1WLpop = PopulationRateMonitor(D1_WL) 
     GPePop = PopulationRateMonitor(GPe_L)
     SNrPop = PopulationRateMonitor(SNrL)
     SNrPopNL = PopulationRateMonitor(SNrNL)
@@ -1076,9 +1074,9 @@ if cortex_D1_action == 1:
     ThalamusL.I = 0
     ThalamusNL.I = 0
     ThalamusWL.I = 0
-    CortexL.I = 5
-    CortexNL.I = 5
-    CortexWL.I = 5
+    CortexL.I = 1
+    CortexNL.I = 1
+    CortexWL.I = 1
     run(cortex_D1_duration,report='text')
     
     # smoothed rates 
@@ -1111,6 +1109,15 @@ if cortex_D1_action == 1:
     ylabel('Firing Rate')
     title('Cortical Firing Rates')
     legend('R')
+    
+    figure()
+    plot(D1Lpop.t/ms,D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(D1NLpop.t/ms,D1NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(D1WLpop.t/ms,D1WLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    xlabel('Time(ms)')
+    ylabel('Firing Rate')
+    title('D1 Firing Rates')
+    legend('R2U')   
     
     avg_D1L = np.mean(CortexL_D1L.w)
     avg_D1NL = np.mean(CortexNL_D1NL.w)
@@ -1160,9 +1167,9 @@ if learnAction == 1:
         SNrWL_binnedFR.append(SNrWL_FR)     
         
     figure()
-    plot(SNrL_binnedFR)
-    plot(SNrNL_binnedFR)
-    plot(SNrWL_binnedFR)
+    plot(SNrL_binnedFR,'r')
+    plot(SNrNL_binnedFR,'b')
+    plot(SNrWL_binnedFR,'g')
     plot(np.ones(len(SNrL_binnedFR))*SNr_thresh,'k--')
     legend('R2U')
     title('Online Calculation of SNr Firing rates')    
