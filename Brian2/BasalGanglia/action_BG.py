@@ -48,7 +48,7 @@ learnAction = 1 # test to see if an action can be learned
 # variables 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 500000*ms 
+learn_duration = 30000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -105,7 +105,7 @@ integration_window = 100*ms
 
 # Cortical-MSN plasticity
 MSN_High = -60
-SNr_thresh = 20*Hz 
+SNr_thresh = 10*Hz 
 
 # MSN-GP
 MSN_GP = 1 # this is the connectivity between D1-SNr and D2-GPe 
@@ -267,15 +267,6 @@ CortexL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical n
 CortexNL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
 CortexWL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
 
-############ WTA neurons 
-LeverPress = NeuronGroup(2,eqs2,threshold='v>30',reset=reset,method='euler')
-NoLeverPress = NeuronGroup(2,eqs2,threshold='v>30',reset=reset,method='euler')
-WrongLeverPress = NeuronGroup(2,eqs2,threshold='v>30',reset=reset,method='euler')
-#InhInter = NeuronGroup(5,eqs3,threshold='v>20',reset=reset3,method='euler')
-InhInterL = NeuronGroup(2,eqs3,threshold='v>20',reset=reset3,method='euler')
-InhInterNL = NeuronGroup(2,eqs3,threshold='v>20',reset=reset3,method='euler')
-InhInterWL = NeuronGroup(2,eqs3,threshold='v>20',reset=reset3,method='euler')
-
 ############ Cortical Neurons 
 if synfire != 1:
    CortexL = NeuronGroup(n,model=eqs,threshold='v>30',reset=reset0,method='euler')
@@ -411,71 +402,6 @@ ThalamusWL.u = b0*c0
 
 #%% Synapses
 
-############ WTA circuit 
-LeverPress_PressEx = Synapses(LeverPress,LeverPress,on_pre='v+=10') # excitatory with lower delays 
-LeverPress_PressEx.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_PressEx.delay = 2*ms
-
-LeverPress_InhNL = Synapses(LeverPress,InhInterNL,on_pre='v+=10')
-LeverPress_InhNL.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_InhNL.delay = 2*ms
-
-LeverPress_InhWL = Synapses(LeverPress,InhInterWL,on_pre='v+=10')
-LeverPress_InhWL.connect(condition='i!=j',p=1,skip_if_invalid=True)
-LeverPress_InhWL.delay = 2*ms
-
-# Wrong lever Press
-WrongPress_WrongPressEx = Synapses(WrongLeverPress,WrongLeverPress,on_pre='v+=10')
-WrongPress_WrongPressEx.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_WrongPressEx.delay = 2*ms
-
-WrongPress_InhL = Synapses(WrongLeverPress,InhInterL,on_pre='v+=10')
-WrongPress_InhL.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_InhL.delay = 2*ms
-
-WrongPress_InhNL = Synapses(WrongLeverPress,InhInterNL,on_pre='v+=10')
-WrongPress_InhNL.connect(condition='i!=j',p=1,skip_if_invalid=True)
-WrongPress_InhNL.delay = 2*ms
-
-# No Lever Press 
-NoPress_NoPressEx = Synapses(NoLeverPress,NoLeverPress,on_pre='v+=10')
-NoPress_NoPressEx.connect(condition='i!=j',p=1,skip_if_invalid=True)
-NoPress_NoPressEx.delay = 2*ms
-
-NoPress_InhL = Synapses(NoLeverPress,InhInterL,on_pre='v+=10')
-NoPress_InhL.connect(condition='i!=j',p=1,skip_if_invalid=True)
-NoPress_InhL.delay = 2*ms
-
-NoPress_InhWL = Synapses(NoLeverPress,InhInterWL,on_pre='v+=10')
-NoPress_InhWL.connect(condition='i!=j',p=1,skip_if_invalid=True)
-NoPress_InhWL.delay = 2*ms
-
-# Inhibitory Interneuron
-InhWLPress = Synapses(InhInterWL,LeverPress,on_pre='v-=20')
-InhWLPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-InhWLPress.delay = 1*ms
-
-InhNLPress = Synapses(InhInterNL,LeverPress,on_pre='v-=20')
-InhNLPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-InhNLPress.delay = 1*ms
-
-InhLWrongPress = Synapses(InhInterL,WrongLeverPress,on_pre='v-=20')
-InhLWrongPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-InhLWrongPress.delay = 1*ms
-
-InhNLWrongPress = Synapses(InhInterNL,WrongLeverPress,on_pre='v-=20')
-InhNLWrongPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-InhNLWrongPress.delay = 1*ms
-
-InhLNoPress = Synapses(InhInterL,NoLeverPress,on_pre='v-=20')
-InhLNoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-InhLNoPress.delay = 1*ms
-
-InhWLNoPress = Synapses(InhInterWL,NoLeverPress,on_pre='v-=20')
-InhWLNoPress.connect(condition='i!=j',p=1,skip_if_invalid=True)
-InhWLNoPress.delay = 1*ms
-
-
 ############ Cortical Projections 
 # synfire connections 
 if synfire == 1:
@@ -500,19 +426,6 @@ if synfire == 1:
     
     #SinputWL = Synapses(Pinput, CortexWL[:group_size], on_pre='y+=weight')
     #SinputWL.connect()    
-    
-# Cortex WTA
-CortexL_Lever = Synapses(CortexL,LeverPress,on_pre='v+=10')
-CortexL_Lever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #i=[0,1,2],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-CortexL_Lever.delay = 15*ms
-
-CortexNL_NoLever = Synapses(CortexNL,NoLeverPress,on_pre='v+=10')
-CortexNL_NoLever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #(i=[3,4,5],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-CortexNL_NoLever.delay = 15*ms
-
-CortexWL_WrongLever = Synapses(CortexWL,WrongLeverPress,on_pre='v+=10')
-CortexWL_WrongLever.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True) #i=[6,7,8],j=0)#j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True) 
-CortexWL_WrongLever.delay = 15*ms
 
 CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexL_D1L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.9', skip_if_invalid=True)
@@ -681,18 +594,6 @@ P_CortexWL.delay = 5*ms
 P_CortexWL.w = 5
 
 ############ SNr Projections 
-# Action
-SNrL_Action =  Synapses(SNrL,LeverPress,on_pre='v-=10')
-SNrL_Action.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
-SNrL_Action.delay = 5*ms
-
-SNrNL_NoAction = Synapses(SNrNL,NoLeverPress,on_pre='v-=10')
-SNrNL_NoAction.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
-SNrNL_NoAction.delay = 5*ms
-
-SNrWL_WrongAction = Synapses(SNrWL,WrongLeverPress,on_pre='v-=10')
-SNrWL_WrongAction.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid=True)
-SNrWL_WrongAction.delay = 5*ms
 
 # Thalamus
 SNrL_ThalamusL = Synapses(SNrL,ThalamusL,weightEqs,on_pre=subW)
@@ -826,9 +727,9 @@ win = [0.25, 0.25, 0.5]
 if learnAction == 1: 
     
    # independent E/I Poisson inputs
-   p1 = PoissonInput(CortexL, 'v', N=6, rate=10*Hz, weight=s*2.5)
-   p2 = PoissonInput(CortexNL, 'v', N=6, rate=10*Hz, weight=s*2.5)
-   p3 = PoissonInput(CortexWL, 'v', N=6, rate=10*Hz, weight=s*2.5)
+   p1 = PoissonInput(CortexL, 'v', N=3, rate=20*Hz, weight=s*5)
+   p2 = PoissonInput(CortexNL, 'v', N=3, rate=20*Hz, weight=s*5)
+   p3 = PoissonInput(CortexWL, 'v', N=3, rate=20*Hz, weight=s*5)
 
    def calculate_FR(spike_monitor,integration_window,t): 
        bin_edges = np.arange((t-integration_window)/ms,t/ms,integration_window/4/ms)
@@ -1013,9 +914,6 @@ def cortex_D1_action():
     CortexL_D1L.w = 60 # overwriting starting weights 
     
     # population monitors 
-    ActionPop = PopulationRateMonitor(LeverPress)
-    NoActionPop = PopulationRateMonitor(NoLeverPress)
-    WrongActionPop = PopulationRateMonitor(WrongLeverPress)
     CortexPop = PopulationRateMonitor(CortexL)
     D1Lpop = PopulationRateMonitor(D1_L)
     D1NLpop = PopulationRateMonitor(D1_NL)
@@ -1033,17 +931,7 @@ def cortex_D1_action():
     SNrL_smoothFR = SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz
     SNrNL_smoothFR =SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz
     SNrWL_smoothFR =SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz
-    
-    # plots    
-    figure()
-    plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-    plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
-    xlabel('Time(ms)')
-    ylabel('Firing Rate')
-    title('Action Firing Rates')
-    legend('RUU')
-    
+        
     figure()
     plot(SNrPop.t/ms,SNrL_smoothFR,'r')
     plot(SNrPopNL.t/ms,SNrNL_smoothFR,'b')
@@ -1089,9 +977,6 @@ def cortex_D1_action():
     
 if learnAction == 1:
     # Population monitors     
-    ActionPop = PopulationRateMonitor(LeverPress)
-    NoActionPop = PopulationRateMonitor(NoLeverPress)
-    WrongActionPop = PopulationRateMonitor(WrongLeverPress)
     CortexLpop = PopulationRateMonitor(CortexL)
     CortexNLpop = PopulationRateMonitor(CortexNL)
     CortexWLpop = PopulationRateMonitor(CortexWL)
@@ -1146,16 +1031,7 @@ if learnAction == 1:
     print np.str(np.sum(np.less(SNrL_binnedFR, SNr_thresh))) + '...rewarded action'
     print np.str(np.sum(np.less(SNrNL_binnedFR, SNr_thresh))) + '...unrewared action'
     print np.str(np.sum(np.less(SNrWL_binnedFR, SNr_thresh))) + '...unrewared action'
-    
-    figure()
-    plot(ActionPop.t/ms,ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-    plot(NoActionPop.t/ms,NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(WrongActionPop.t/ms,WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    xlabel('Time(ms)')
-    ylabel('Firing Rate')
-    title('Action Firing Rates')
-    legend('R2U')
-    
+        
     print np.mean(CortexL_D1L.w)
     print np.mean(CortexNL_D1NL.w)
     print np.mean(CortexWL_D1WL.w)
@@ -1201,9 +1077,6 @@ if synfire == 1:
    
    
 def test_DA():
-   ActionPop = PopulationRateMonitor(LeverPress)
-   NoActionPop = PopulationRateMonitor(NoLeverPress)
-   WrongActionPop = PopulationRateMonitor(WrongLeverPress)
    CortexPop = PopulationRateMonitor(CortexL)
    DApop = PopulationRateMonitor(DA)
    D1pop = PopulationRateMonitor(D1_L)
@@ -1227,15 +1100,6 @@ def test_DA():
 
    figure()
    plot(DAvolts.t,DAvolts.v[0])    
-    
-   figure()
-   plot(ActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(NoActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(WrongActionPop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   xlabel('Time(ms)')
-   ylabel('Firing Rate')
-   title('Action Firing Rates')
-   legend('R2U')
 
    figure()
    plot(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
