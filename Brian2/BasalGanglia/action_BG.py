@@ -24,24 +24,15 @@ Created on Tue Dec 06 10:05:50 2016
 # EP 170316
 ###############
 
-# Add stochasticity xi*second**.5
-
-# make cortical activity more random across channels
 
 #%% import and setup 
-from brian2 import *
-import numpy as np
-import scipy as sp
-import scipy.stats
-import matplotlib.pyplot as plt
 import multiprocessing 
 
 import sys
 sys.path.insert(0, 'C:\Users\elijah\Documents\GitHub\ModelingSNN\Brian2\BasalGanglia')
-from basalGangliaTests import *
+from basalGangliaTests import pop_firing, sequence, cortex_D1_action, test_DA, learn_action
 
-#sequence()
-#pop_firing()
+learn_action()
 
 #%% Run and analyze
    

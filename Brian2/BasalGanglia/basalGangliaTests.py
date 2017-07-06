@@ -196,23 +196,23 @@ def cortex_D1_action():
     
 def learn_action(): 
    # independent E/I Poisson inputs
-   p1 = PoissonInput(CortexL, 'v', N=3, rate=20*Hz, weight=s*5)
-   p2 = PoissonInput(CortexNL, 'v', N=3, rate=20*Hz, weight=s*5)
-   p3 = PoissonInput(CortexWL, 'v', N=3, rate=20*Hz, weight=s*5)
+   p1 = PoissonInput(CortexL, 'v', N=20, rate=2*Hz, weight=100)
+   p2 = PoissonInput(CortexNL, 'v', N=20, rate=2*Hz, weight=100)
+   p3 = PoissonInput(CortexWL, 'v', N=20, rate=2*Hz, weight=100)
    
    #%% Record
    SNrLspikes = SpikeMonitor(SNrL)
-   SNrNLspikes = SpikeMonitor(BG.SNrNL)
-   SNrWLspikes = SpikeMonitor(BG.SNrWL)
-   STNspikes = SpikeMonitor(BG.STN)
-   CortexLspikes= SpikeMonitor(BG.CortexL)
-   CortexNLspikes = SpikeMonitor(BG.CortexNL)
-   CortexWLspikes = SpikeMonitor(BG.CortexWL)
-   DASpikes = SpikeMonitor(BG.DA)
-   D2spikes = SpikeMonitor(BG.D2_L)
-   D1_Lspikes = SpikeMonitor(BG.D1_L)
-   D1_NLspikes = SpikeMonitor(BG.D1_NL)
-   D1_WLspikes = SpikeMonitor(BG.D1_WL) 
+   SNrNLspikes = SpikeMonitor(SNrNL)
+   SNrWLspikes = SpikeMonitor(SNrWL)
+   STNspikes = SpikeMonitor(STN)
+   CortexLspikes= SpikeMonitor(CortexL)
+   CortexNLspikes = SpikeMonitor(CortexNL)
+   CortexWLspikes = SpikeMonitor(CortexWL)
+   DASpikes = SpikeMonitor(DA)
+   D2spikes = SpikeMonitor(D2_L)
+   D1_Lspikes = SpikeMonitor(D1_L)
+   D1_NLspikes = SpikeMonitor(D1_NL)
+   D1_WLspikes = SpikeMonitor(D1_WL) 
    
    win = [0.25, 0.25, 0.5]
    def calculate_FR(spike_monitor,integration_window,t): 
@@ -262,7 +262,7 @@ def learn_action():
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)        
 
 #network operations     
-   rew_win=20*ms        
+   rew_win=10*ms        
    @network_operation(dt=rew_win)
    def Reward(t):
        SNrL_rate = calculate_FR(SNrLspikes,integration_window,t)

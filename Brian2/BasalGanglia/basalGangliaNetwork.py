@@ -228,8 +228,7 @@ onpreDA_D2='''
              v_post -= w
              traceCon += traceConstant
              '''            
-#%% Neuron Groups 
-             
+#%% Neuron Groups   
 if synfire == 1:
    n_groups = 10
    group_size = 80 # This will result in 800 neurons which is what Laje and Buonomano 2013 used in their RNN

@@ -9,7 +9,7 @@ from brian2 import *
 
 # IZ MSN
 start_scope()
-duration = 100*ms
+duration = 500*ms
 
 #%% Equations
 
