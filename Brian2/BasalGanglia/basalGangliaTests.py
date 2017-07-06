@@ -196,9 +196,9 @@ def cortex_D1_action():
     
 def learn_action(): 
    # independent E/I Poisson inputs
-   p1 = PoissonInput(CortexL, 'v', N=20, rate=2*Hz, weight=100)
-   p2 = PoissonInput(CortexNL, 'v', N=20, rate=2*Hz, weight=100)
-   p3 = PoissonInput(CortexWL, 'v', N=20, rate=2*Hz, weight=100)
+   p1 = PoissonInput(CortexL, 'v', N=40, rate=1*Hz, weight=100)
+   p2 = PoissonInput(CortexNL, 'v', N=40, rate=1*Hz, weight=100)
+   p3 = PoissonInput(CortexWL, 'v', N=40, rate=1*Hz, weight=100)
    
    #%% Record
    SNrLspikes = SpikeMonitor(SNrL)
