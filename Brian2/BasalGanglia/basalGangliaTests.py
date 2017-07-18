@@ -69,9 +69,31 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    title('D1 pop firing rates')
    legend('R2U')
    plt.savefig(save_root + 'SequenceTest_D1firingRate.png')
-
+   
 def pop_firing(): # reproduce figure 2 in Humphries et al., 2006   
    # population activity
+   ############ Poisson Neurons 
+   CortexL_Poisson = PoissonGroup(n, 45*Hz) # input to cortical neurons
+   CortexNL_Poisson = PoissonGroup(n, 45*Hz) # input to cortical neurons
+   CortexWL_Poisson = PoissonGroup(n, 45*Hz) # input to cortical neurons
+   
+   ############ Poisson Projections 
+   # Poisson Cortex... introduce some noise into the whole system 
+   P_CortexL = Synapses(CortexL_Poisson,CortexL,weightEqs,on_pre=addW)
+   P_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+   P_CortexL.delay = 5*ms
+   P_CortexL.w = 5
+   
+   P_CortexNL = Synapses(CortexNL_Poisson,CortexNL,weightEqs,on_pre=addW)
+   P_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+   P_CortexNL.delay = 5*ms
+   P_CortexNL.w = 5
+    
+   P_CortexWL = Synapses(CortexWL_Poisson,CortexWL,weightEqs,on_pre=addW)
+   P_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+   P_CortexWL.delay = 5*ms
+   P_CortexWL.w = 5   
+
    GPePop = PopulationRateMonitor(GPe_L)
    SNrPop = PopulationRateMonitor(SNrL)
    STNpop = PopulationRateMonitor(STN)
@@ -138,9 +160,9 @@ def cortex_D1_action():
     SNrPopNL = PopulationRateMonitor(SNrNL)
     SNrPopWL = PopulationRateMonitor(SNrWL)
     
-    CortexL.I = 5
-    CortexNL.I = 5
-    CortexWL.I = 5
+    CortexL.I = 3
+    CortexNL.I = 3
+    CortexWL.I = 3
     run(cortex_D1_duration,report='text',report_period=report_time)
     
     # smoothed rates 
@@ -196,9 +218,17 @@ def cortex_D1_action():
     
 def learn_action(): 
    # independent E/I Poisson inputs
-   p1 = PoissonInput(CortexL, 'v', N=40, rate=1*Hz, weight=100)
-   p2 = PoissonInput(CortexNL, 'v', N=40, rate=1*Hz, weight=100)
-   p3 = PoissonInput(CortexWL, 'v', N=40, rate=1*Hz, weight=100)
+   p1 = PoissonGroup(10, 20*Hz)
+   p2 = PoissonGroup(10, 20*Hz)#PoissonInput(CortexNL, 'v', N=80, rate=1*Hz, weight=100)
+   p3 = PoissonGroup(10, 20*Hz)#PoissonInput(CortexWL, 'v', N=80, rate=1*Hz, weight=100)
+   
+   p1_CortexL = Synapses(p1,CortexL, pre='v+=20')
+   p2_CortexNL = Synapses(p2,CortexNL, pre='v+=20')
+   p3_CortexWL = Synapses(p3,CortexWL, pre='v+=20')
+   
+   p1_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+   p2_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+   p3_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
    
    #%% Record
    SNrLspikes = SpikeMonitor(SNrL)
@@ -214,18 +244,20 @@ def learn_action():
    D1_NLspikes = SpikeMonitor(D1_NL)
    D1_WLspikes = SpikeMonitor(D1_WL) 
    
-   win = [0.25, 0.25, 0.5]
+   #win = [ 0.125, 0.125, 0.25, 0.5]
+   #win = [ 0.25, 0.25, 0.25, 0.25]
    def calculate_FR(spike_monitor,integration_window,t): 
        bin_edges = np.arange((t-integration_window)/ms,t/ms,integration_window/4/ms)
+       win = np.ones(len(bin_edges))/len(bin_edges)
        all_rates = []
        for i in range(0,len(bin_edges)-1):
-           rate = np.size(np.where((spike_monitor.t > bin_edges[i]*ms)&(spike_monitor.t < bin_edges[i+1]*ms)))/n/integration_window
+           rate = np.size(np.where((spike_monitor.t > bin_edges[i]*ms)&(spike_monitor.t < bin_edges[i+1]*ms)))/n/(integration_window/4)
            all_rates.append(rate)
            smooth_rate = np.convolve(all_rates,win,mode='valid')
        return smooth_rate[len(smooth_rate)-1]*Hz
    
 
-   def complex_DA_LTP(t,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
+   def complex_DA_LTP(t,window,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
        DAind = np.where(SpikeMon2.t > (t - window)) 
        #SynapseMon.w = SynapseMon.w * 0.999
        if len(DAind[0]) > 5: # was DA released?
@@ -239,7 +271,7 @@ def learn_action():
            s2 = set(high_synaptic_ind) # set object for high_synpatic ind
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-           SynapseMon.w[strengthen_synapse] +=   3*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[strengthen_synapse] +=   100000*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
@@ -271,23 +303,23 @@ def learn_action():
        action = np.where(np.min([SNrL_rate,SNrNL_rate,SNrWL_rate]))
        if action[0] == 0:
            if SNrL_rate < SNr_thresh:
-              DA.I += 2 # If a reward was recieved give DA
-           else :
-               DA.I = 0
-       else :
-            DA.I = 0          
+              DA.v += 50 # If a reward was recieved give DA
+          # else :
+          #     DA.I = 0
+       #else :
+       #     DA.I = 0          
            
    @network_operation(dt=rew_win)
    def calculate_LTP(t):
-       DA_LTP(t,rew_win,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
+       complex_DA_LTP(t,rew_win,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
 
    @network_operation(dt=rew_win)
    def calculate_LTP2(t):
-       DA_LTP(t,rew_win,CortexNLspikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
+       complex_DA_LTP(t,rew_win,CortexNLspikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
     
    @network_operation(dt=rew_win)    
    def calculate_LTP3(t):
-       DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)    
+       complex_DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)    
   
     # Population monitors     
    CortexLpop = PopulationRateMonitor(CortexL)
@@ -343,14 +375,6 @@ def learn_action():
    print np.str(np.sum(np.less(SNrL_binnedFR, SNr_thresh))) + '...rewarded action'
    print np.str(np.sum(np.less(SNrNL_binnedFR, SNr_thresh))) + '...unrewared action'
    print np.str(np.sum(np.less(SNrWL_binnedFR, SNr_thresh))) + '...unrewared action'
-     
-   avg_weights = [np.mean(CortexL_D1L.w), np.mean(CortexNL_D1NL.w), np.mean(CortexWL_D1WL.w)]
-   print avg_weights
-   
-   if np.where(avg_weights == np.max(avg_weights))[0] == 0:
-      print 'Learn action test passed'
-   else:
-          print 'Learn action test FAILED!!'
    
    figure()
    plot(DApop.t/ms,DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
@@ -378,6 +402,14 @@ def learn_action():
    title('D1 Firing Rates')
    legend('R2U')   
    plt.savefig(save_root + 'learnAction_D1firingRate.png')
+   
+   avg_weights = [np.mean(CortexL_D1L.w), np.mean(CortexNL_D1NL.w), np.mean(CortexWL_D1WL.w)]
+   print avg_weights
+   
+   if np.where(avg_weights == np.max(avg_weights))[0] == 0:
+      print 'Learn action test passed'
+   else:
+          print 'Learn action test FAILED!!'
    
 
 def test_synfire():

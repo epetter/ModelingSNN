@@ -12,13 +12,13 @@ start_scope()
 
 # options
 synfire = 0
-SNr_collaterals = 0
+SNr_collaterals = 1
 
 # variables 
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 5000*ms 
+learn_duration = 7000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 100*ms
@@ -74,11 +74,11 @@ p = 8 # proximal
 d = 5 # distal 
 
 # firing rate window
-integration_window = 100*ms
+integration_window = 400*ms
 
 # Cortical-MSN plasticity
 MSN_High = -60
-SNr_thresh = 10*Hz 
+SNr_thresh = 75*Hz 
 
 # MSN-GP
 MSN_GP = 1 # this is the connectivity between D1-SNr and D2-GPe 
@@ -233,11 +233,6 @@ if synfire == 1:
    n_groups = 10
    group_size = 80 # This will result in 800 neurons which is what Laje and Buonomano 2013 used in their RNN
    w3 = n_groups*group_size             
-
-############ Poisson Neurons 
-CortexL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
-CortexNL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
-CortexWL_Poisson = PoissonGroup(n, np.arange(n)*Hz + 10*Hz) # input to cortical neurons
 
 ############ Cortical Neurons 
 if synfire != 1:
@@ -498,6 +493,38 @@ D1_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_inva
 D1_SNrWL.delay = 4*ms # Humphries, et al., 2006 
 D1_SNrWL.w = s #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
 
+# MSN collaterals
+D1L_NL = Synapses(D1_L,D1_NL,weightEqs,on_pre=subW)
+D1L_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True)
+D1L_NL.delay = 2*ms # Humphries, et al., 2006 
+D1L_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+
+D1L_WL = Synapses(D1_L,D1_WL,weightEqs,on_pre=subW)
+D1L_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True)
+D1L_WL.delay = 2*ms # Humphries, et al., 2006 
+D1L_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+
+D1NL_L = Synapses(D1_NL,D1_L,weightEqs,on_pre=subW)
+D1NL_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True)
+D1NL_L.delay = 2*ms # Humphries, et al., 2006 
+D1NL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+
+D1NL_WL = Synapses(D1_NL,D1_WL,weightEqs,on_pre=subW)
+D1NL_WL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True)
+D1NL_WL.delay = 2*ms # Humphries, et al., 2006 
+D1NL_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+
+D1WL_L = Synapses(D1_WL,D1_L,weightEqs,on_pre=subW)
+D1WL_L.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True)
+D1WL_L.delay = 2*ms # Humphries, et al., 2006 
+D1WL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+
+D1WL_NL = Synapses(D1_WL,D1_NL,weightEqs,on_pre=subW)
+D1WL_NL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.2', skip_if_invalid=True)
+D1WL_NL.delay = 2*ms # Humphries, et al., 2006 
+D1WL_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+
+
 # D2 
 D2_L_GPe_L = Synapses(D2_L,GPe_L,weightEqs,on_pre=subW)
 D2_L_GPe_L.connect(j='k for k in range(i-w2, i+w2) if rand()<MSN_GP', skip_if_invalid=True) # Lindhal et al., 2013 suggest keeping D1-SNr and D2-GPe the same 
@@ -548,23 +575,6 @@ GPe_WL_STN.connect(j='k for k in range(i-w2, i+w2) if rand()<1', skip_if_invalid
 GPe_WL_STN.delay = 5*ms # Lindahl et al., 2013 
 GPe_WL_STN.w = np.random.choice([s,p,d],len(GPe_WL_STN.i),p=[0.3,0.4,0.3]) # Humphries, et al., 2006  #rand(len(GPe_STN.i))
 
-############ Poisson Projections 
-# Poisson Cortex... introduce some noise into the whole system 
-P_CortexL = Synapses(CortexL_Poisson,CortexL,weightEqs,on_pre=addW)
-P_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-P_CortexL.delay = 5*ms
-P_CortexL.w = 5
-
-P_CortexNL = Synapses(CortexNL_Poisson,CortexNL,weightEqs,on_pre=addW)
-P_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-P_CortexNL.delay = 5*ms
-P_CortexNL.w = 5
-
-P_CortexWL = Synapses(CortexWL_Poisson,CortexWL,weightEqs,on_pre=addW)
-P_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
-P_CortexWL.delay = 5*ms
-P_CortexWL.w = 5
-
 ############ SNr Projections 
 
 # Thalamus
@@ -585,48 +595,49 @@ SNrWL_ThalamusWL.w = d
 
 # Collaterals 
 if  SNr_collaterals == 1:
+    SNr_prob = 0.3
     SNrL_SNrL = Synapses(SNrL,SNrL,weightEqs,on_pre=subW)
-    SNrL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrL_SNrL.delay = 1*ms # Humphries, et al., 2006
     SNrL_SNrL.w = np.random.choice([s,p],len(SNrL_SNrL.i),p=[0.5,0.5])
     
     SNrL_SNrNL = Synapses(SNrL,SNrNL,weightEqs,on_pre=subW)
-    SNrL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrL_SNrNL.delay = 1*ms # Humphries, et al., 2006
     SNrL_SNrNL.w = np.random.choice([s,p],len(SNrL_SNrNL.i),p=[0.5,0.5])
     
     SNrL_SNrWL = Synapses(SNrL,SNrWL,weightEqs,on_pre=subW)
-    SNrL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrL_SNrWL.delay = 1*ms # Humphries, et al., 2006
     SNrL_SNrWL.w = np.random.choice([s,p],len(SNrL_SNrWL.i),p=[0.5,0.5])
     
     SNrNL_SNrL = Synapses(SNrNL,SNrL,weightEqs,on_pre=subW)
-    SNrNL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrNL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrNL_SNrL.delay = 1*ms # Humphries, et al., 2006
     SNrNL_SNrL.w = np.random.choice([s,p],len(SNrNL_SNrL.i),p=[0.5,0.5])
     
     SNrNL_SNrNL = Synapses(SNrNL,SNrNL,weightEqs,on_pre=subW)
-    SNrNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrNL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrNL_SNrNL.delay = 1*ms # Humphries, et al., 2006
     SNrNL_SNrNL.w = np.random.choice([s,p],len(SNrNL_SNrNL.i),p=[0.5,0.5])
     
     SNrNL_SNrWL = Synapses(SNrNL,SNrWL,weightEqs,on_pre=subW)
-    SNrNL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrNL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrNL_SNrWL.delay = 1*ms # Humphries, et al., 2006
     SNrNL_SNrWL.w = np.random.choice([s,p],len(SNrNL_SNrWL.i),p=[0.5,0.5])
     
     SNrWL_SNrL = Synapses(SNrWL,SNrL,weightEqs,on_pre=subW)
-    SNrWL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrWL_SNrL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrWL_SNrL.delay = 1*ms # Humphries, et al., 2006
     SNrWL_SNrL.w = np.random.choice([s,p],len(SNrWL_SNrL.i),p=[0.5,0.5])
     
     SNrWL_SNrNL = Synapses(SNrWL,SNrNL,weightEqs,on_pre=subW)
-    SNrWL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrWL_SNrNL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrWL_SNrNL.delay = 1*ms # Humphries, et al., 2006
     SNrWL_SNrNL.w = np.random.choice([s,p],len(SNrWL_SNrNL.i),p=[0.5,0.5])
     
     SNrWL_SNrWL = Synapses(SNrWL,SNrWL,weightEqs,on_pre=subW)
-    SNrWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.33', skip_if_invalid=True)
+    SNrWL_SNrWL.connect(j='k for k in range(i-w2, i+w2) if rand()<SNr_prob', skip_if_invalid=True)
     SNrWL_SNrWL.delay = 1*ms # Humphries, et al., 2006
     SNrWL_SNrWL.w = np.random.choice([s,p],len(SNrWL_SNrWL.i),p=[0.5,0.5])
 

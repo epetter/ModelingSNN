@@ -32,7 +32,9 @@ import sys
 sys.path.insert(0, 'C:\Users\elijah\Documents\GitHub\ModelingSNN\Brian2\BasalGanglia')
 from basalGangliaTests import pop_firing, sequence, cortex_D1_action, test_DA, learn_action
 
-learn_action()
+#learn_action()
+#pop_firing()
+#cortex_D1_action()
 
 #%% Run and analyze
    
