@@ -9,7 +9,7 @@ from brian2 import *
 
 # IZ MSN
 start_scope()
-duration = 500*ms
+duration = 1500*ms
 
 #%% Equations
 
@@ -29,6 +29,7 @@ P = NeuronGroup(10, model=eqs,
 threshold='v>40', reset=reset, method='euler')
 
 P.v = -55
+P.u = -55*-20
 
 #%% Neurons
 

@@ -12,7 +12,7 @@ memc = 200.0*pfarad  # Membrane capacitance
 bgcurrent = 200*pA   # External current
 tau_m=6*ms
 tau_ampa=8*ms
-g_synpk=.01*nsiemens
+g_synpk=0.01*nsiemens
 transwdth=1.0*ms
 
 #%%
@@ -28,9 +28,9 @@ I : 1
 eqs_neurons2='''
 dv/dt= -v/tau_m + g_ampa*volt/memc  : volt (unless refractory)
 dg_ampa/dt = -g_ampa/tau_ampa +z/ms : siemens
-dz/dt = -z/tau_ampa +g_syn*Tr_pre/ms : siemens
+dz/dt = -z/tau_ampa +g_syn*Tr/ms : siemens
 g_syn=g_synpk/(tau_ampa/ms*exp(-1)) : siemens
-Tr_pre=.25*(tanh((t/ms-tspike/ms)/.005)-tanh((t/ms-(tspike/ms +transwdth/ms))/.005)) : 1
+Tr=.25*(tanh((t/ms-tspike/ms)/.005)-tanh((t/ms-(tspike/ms +transwdth/ms))/.005)) : 1
 
 I : 1
 tspike:second
@@ -78,7 +78,7 @@ S.connect(i=0,j=0)
 #################################################################
 M = StateMonitor(N, ('v'), record=True)
 sm = SpikeMonitor(N)
-M2 = StateMonitor(N2, ('v','g_ampa','Tr_pre'), record=True)
+M2 = StateMonitor(N2, ('v','g_ampa','Tr'), record=True)
 sm2 = SpikeMonitor(N2)
 
 #%%

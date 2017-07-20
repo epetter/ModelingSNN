@@ -147,12 +147,52 @@ def pop_firing(): # reproduce figure 2 in Humphries et al., 2006
        print 'SNr firing rate passed test'
    else:
       print 'ERROR!! SNr firing rate not reasonable'           
+
+def MSN_SNr_inhibition():
+    SNrMon = StateMonitor(SNrL, ('v'), record=True)
+    SNrSpikes = SpikeMonitor(SNrL, record=True)
+    SNrNLMon = StateMonitor(SNrNL, ('v'), record=True)
+    MSN_mon = StateMonitor(D1_L,('v'), record=True)
+    MSNNL_mon = StateMonitor(D1_NL,('v'), record=True)
+    CortexLmon = StateMonitor(CortexL,('v'), record=True)
+    
+    ta_CortexL = TimedArray([0,1,1],dt=MSN_SNr_duration)
+    ta_CortexNL = TimedArray([0,1,10],dt=MSN_SNr_duration)
+    
+    @network_operation(dt=MSN_SNr_duration)
+    def update_sequence(t):
+       CortexL.I = ta_CortexL(t)
+       CortexNL.I = ta_CortexNL(t)
+    
+    run(MSN_SNr_duration*3,report='text',report_period=report_time)
+      
+      
+    figure()
+    plot(CortexLmon.t/ms, CortexLmon.v[0]/mV, '-r')
+    #plot(SNrNLMon.t/ms, SNrNLMon.v[0]/mV, '-b')
+    title('Cortical voltage')
+          
+      
+    figure()
+    plot(SNrMon.t/ms, SNrMon.v[0]/mV, '-r')
+    #plot(SNrNLMon.t/ms, SNrNLMon.v[0]/mV, '-b')
+    title('SNr voltage')
+    
+    figure()
+    plot(SNrSpikes.t/ms,SNrSpikes.i,'.k')
+    
+    figure()
+    plot(MSN_mon.t/ms, MSN_mon.v[0]/mV, '-r')
+    plot(MSNNL_mon.t/ms, MSNNL_mon.v[0]/mV, '-b')
+    title('MSN voltage')
       
 def cortex_D1_action():
     CortexL_D1L.w = CortexD1_start * 2 # overwriting starting weights 
     
     # population monitors 
     CortexPop = PopulationRateMonitor(CortexL)
+    CortexPopNL = PopulationRateMonitor(CortexNL)
+    CortexPopWL = PopulationRateMonitor(CortexWL)
     D1Lpop = PopulationRateMonitor(D1_L)
     D1NLpop = PopulationRateMonitor(D1_NL)
     D1WLpop = PopulationRateMonitor(D1_WL) 
@@ -164,6 +204,8 @@ def cortex_D1_action():
     CortexNL.I = 3
     CortexWL.I = 3
     run(cortex_D1_duration,report='text',report_period=report_time)
+    
+   # print STN.u 
     
     # smoothed rates 
     SNrL_smoothFR = SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz
@@ -182,6 +224,8 @@ def cortex_D1_action():
     
     figure()
     plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+    plot(CortexPopNL.t/ms,CortexPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+    plot(CortexPopWL.t/ms,CortexPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
     xlabel('Time(ms)')
     ylabel('Firing Rate')
     title('Cortical Firing Rates')
@@ -222,9 +266,9 @@ def learn_action():
    p2 = PoissonGroup(10, 20*Hz)#PoissonInput(CortexNL, 'v', N=80, rate=1*Hz, weight=100)
    p3 = PoissonGroup(10, 20*Hz)#PoissonInput(CortexWL, 'v', N=80, rate=1*Hz, weight=100)
    
-   p1_CortexL = Synapses(p1,CortexL, pre='v+=20')
-   p2_CortexNL = Synapses(p2,CortexNL, pre='v+=20')
-   p3_CortexWL = Synapses(p3,CortexWL, pre='v+=20')
+   p1_CortexL = Synapses(p1,CortexL, on_pre='v+=20')
+   p2_CortexNL = Synapses(p2,CortexNL, on_pre='v+=20')
+   p3_CortexWL = Synapses(p3,CortexWL, on_pre='v+=20')
    
    p1_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
    p2_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
@@ -303,11 +347,12 @@ def learn_action():
        action = np.where(np.min([SNrL_rate,SNrNL_rate,SNrWL_rate]))
        if action[0] == 0:
            if SNrL_rate < SNr_thresh:
-              DA.v += 50 # If a reward was recieved give DA
+              DA.v += 20 # If a reward was recieved give DA
           # else :
           #     DA.I = 0
        #else :
        #     DA.I = 0          
+              
            
    @network_operation(dt=rew_win)
    def calculate_LTP(t):
@@ -370,6 +415,15 @@ def learn_action():
    title('SNr Firing Rates')
    legend('R2U')
    plt.savefig(save_root + 'learnAction_SNrfiringRate.png')
+   
+   figure()
+   plot(SNrPop.t/ms,SNrPop.rate/Hz,'r')
+   plot(SNrPopNL.t/ms,SNrPopNL.rate/Hz,'b')
+   plot(SNrPopWL.t/ms,SNrPopWL.rate/Hz,'g')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('SNr Firing Rates')
+   legend('R2U')
    
    print 'Learned Action Results' 
    print np.str(np.sum(np.less(SNrL_binnedFR, SNr_thresh))) + '...rewarded action'
@@ -473,3 +527,22 @@ def test_DA():
    ylabel('Firing Rate')
    title('DA Firing Rates')
    plt.savefig(save_root + 'DAtest_DAfiringRate.png')
+   
+def test_neurons():
+    SNrMon = StateMonitor(SNrL, ('v'), record=True)
+    SNrSpikes = SpikeMonitor(SNrL, record=True)
+    SNrNLMon = StateMonitor(SNrNL, ('v'), record=True)
+    MSN_mon = StateMonitor(D1_L,('v'), record=True)
+    MSNNL_mon = StateMonitor(D1_NL,('v'), record=True)
+    CortexLmon = StateMonitor(CortexL,('v'), record=True)
+    
+    ta_CortexL = TimedArray([0,1,1],dt=MSN_SNr_duration)
+    ta_CortexNL = TimedArray([0,1,10],dt=MSN_SNr_duration)
+    
+    @network_operation(dt=MSN_SNr_duration)
+    def update_sequence(t):
+       CortexL.I = ta_CortexL(t)
+       CortexNL.I = ta_CortexNL(t)
+    
+    run(MSN_SNr_duration*3,report='text',report_period=report_time)
+    
