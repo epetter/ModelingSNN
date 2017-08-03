@@ -17,11 +17,12 @@ from basalGangliaNetwork import *
 #%% Run and analyze
 
 def sequence():  # reproduce figure 3 in humphries et al., 2006        
+   
    # population activity
-
    CortexPopL = PopulationRateMonitor(CortexL)
    CortexPopNL = PopulationRateMonitor(CortexNL)
    CortexPopWL = PopulationRateMonitor(CortexWL)
+   DApop = PopulationRateMonitor(DA)
    D1popL = PopulationRateMonitor(D1_L)
    D1popNL = PopulationRateMonitor(D1_NL)
    D1popWL = PopulationRateMonitor(D1_WL)
@@ -29,15 +30,26 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    SNrPopNL = PopulationRateMonitor(SNrNL)
    SNrPopWL = PopulationRateMonitor(SNrWL)
    
-   ta_CortexL = TimedArray([5,10,10],dt=sequence_duration)
-   ta_CortexNL = TimedArray([5,5,40],dt=sequence_duration)
-   ta_CortexWL = TimedArray([5,5,5],dt=sequence_duration)
+   # Timed arrays to change cortical input
+   ta_CortexL = TimedArray([1,4,4],dt=sequence_duration)
+   ta_CortexNL = TimedArray([1,1,8],dt=sequence_duration)
+   ta_CortexWL = TimedArray([1,1,1],dt=sequence_duration)
   
-   @network_operation(dt=sequence_duration)
+   # network operation to update cortical input
+   @network_operation(dt=sequence_duration) # 
    def update_sequence(t):
        CortexL.I = ta_CortexL(t)
        CortexNL.I = ta_CortexNL(t)
        CortexWL.I = ta_CortexWL(t)
+    
+   # timed array and network opperation to update DA
+   # Does cyclical DA help with action switching?
+   ta_DA = TimedArray([0,5,0,5,0,5],dt=sequence_duration/2)  
+   @network_operation(dt=sequence_duration/2)    
+   def update_DA(t):
+       DA.I = ta_DA(t)
+
+   # Run the sequence 
    run(sequence_duration*3,report='text',report_period=report_time)
    
    figure()
@@ -70,33 +82,42 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    legend('R2U')
    plt.savefig(save_root + 'SequenceTest_D1firingRate.png')
    
+   figure()
+   plot(DApop.t/ms, DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate (Hz)')
+   title('DA firing rate')
+   
+   
 def pop_firing(): # reproduce figure 2 in Humphries et al., 2006   
    # population activity
    ############ Poisson Neurons 
-   CortexL_Poisson = PoissonGroup(n, 45*Hz) # input to cortical neurons
-   CortexNL_Poisson = PoissonGroup(n, 45*Hz) # input to cortical neurons
-   CortexWL_Poisson = PoissonGroup(n, 45*Hz) # input to cortical neurons
+   CortexL_Poisson = PoissonGroup(10, 35*Hz) # input to cortical neurons
+   CortexNL_Poisson = PoissonGroup(10, 35*Hz) # input to cortical neurons
+   CortexWL_Poisson = PoissonGroup(10, 35*Hz) # input to cortical neurons
    
    ############ Poisson Projections 
    # Poisson Cortex... introduce some noise into the whole system 
    P_CortexL = Synapses(CortexL_Poisson,CortexL,weightEqs,on_pre=addW)
-   P_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+   P_CortexL.connect(j='k for k in range(i-n, i+n) if rand()<0.1', skip_if_invalid=True) 
    P_CortexL.delay = 5*ms
-   P_CortexL.w = 5
+   P_CortexL.w = p
    
    P_CortexNL = Synapses(CortexNL_Poisson,CortexNL,weightEqs,on_pre=addW)
-   P_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+   P_CortexNL.connect(j='k for k in range(i-n, i+n) if rand()<0.1', skip_if_invalid=True) 
    P_CortexNL.delay = 5*ms
-   P_CortexNL.w = 5
+   P_CortexNL.w = p
     
    P_CortexWL = Synapses(CortexWL_Poisson,CortexWL,weightEqs,on_pre=addW)
-   P_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.1', skip_if_invalid=True) 
+   P_CortexWL.connect(j='k for k in range(i-n, i+n) if rand()<0.1', skip_if_invalid=True) 
    P_CortexWL.delay = 5*ms
-   P_CortexWL.w = 5   
+   P_CortexWL.w = p   
 
    GPePop = PopulationRateMonitor(GPe_L)
    SNrPop = PopulationRateMonitor(SNrL)
    STNpop = PopulationRateMonitor(STN)
+   CortexPop = PopulationRateMonitor(CortexL)
+   D1pop = PopulationRateMonitor(D1_L)
    
    run (pop_duration,report='text',report_period=report_time) 
 
@@ -131,6 +152,18 @@ def pop_firing(): # reproduce figure 2 in Humphries et al., 2006
    title('Mean Tonic Firing Rates')
    plt.savefig(save_root + 'PopTest_NucleifiringRate.png')
    
+   figure()
+   plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('Cortex Firing Rates')
+   
+   figure() 
+   plot(D1pop.t/ms,D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('D1 pop firing rates')
+   
    print 'Population Firing Results'
    
    if (STN_FR > 8) & (STN_FR < 14):
@@ -146,18 +179,21 @@ def pop_firing(): # reproduce figure 2 in Humphries et al., 2006
    if (SNr_FR > 21) & (SNr_FR < 32):
        print 'SNr firing rate passed test'
    else:
-      print 'ERROR!! SNr firing rate not reasonable'           
+      print 'ERROR!! SNr firing rate not reasonable'     
+      
 
 def MSN_SNr_inhibition():
     SNrMon = StateMonitor(SNrL, ('v'), record=True)
     SNrSpikes = SpikeMonitor(SNrL, record=True)
     SNrNLMon = StateMonitor(SNrNL, ('v'), record=True)
+    GPeMon = StateMonitor(GPe_L, 'v', record = True)
+    STN_Mon = StateMonitor(STN, 'v', record=True)
     MSN_mon = StateMonitor(D1_L,('v'), record=True)
     MSNNL_mon = StateMonitor(D1_NL,('v'), record=True)
     CortexLmon = StateMonitor(CortexL,('v'), record=True)
     
-    ta_CortexL = TimedArray([0,1,1],dt=MSN_SNr_duration)
-    ta_CortexNL = TimedArray([0,1,10],dt=MSN_SNr_duration)
+    ta_CortexL = TimedArray([0,1,10],dt=MSN_SNr_duration)
+    ta_CortexNL = TimedArray([0,1,1],dt=MSN_SNr_duration)
     
     @network_operation(dt=MSN_SNr_duration)
     def update_sequence(t):
@@ -166,16 +202,18 @@ def MSN_SNr_inhibition():
     
     run(MSN_SNr_duration*3,report='text',report_period=report_time)
       
-      
     figure()
     plot(CortexLmon.t/ms, CortexLmon.v[0]/mV, '-r')
     #plot(SNrNLMon.t/ms, SNrNLMon.v[0]/mV, '-b')
     title('Cortical voltage')
           
+    figure()
+    plot(STN_Mon.t/ms, STN_Mon.v[0]/mV, '-r')
+    title('STN voltage')      
       
     figure()
     plot(SNrMon.t/ms, SNrMon.v[0]/mV, '-r')
-    #plot(SNrNLMon.t/ms, SNrNLMon.v[0]/mV, '-b')
+    plot(SNrNLMon.t/ms, SNrNLMon.v[0]/mV, '-b')
     title('SNr voltage')
     
     figure()
@@ -185,9 +223,13 @@ def MSN_SNr_inhibition():
     plot(MSN_mon.t/ms, MSN_mon.v[0]/mV, '-r')
     plot(MSNNL_mon.t/ms, MSNNL_mon.v[0]/mV, '-b')
     title('MSN voltage')
+    
+    figure()
+    plot(GPeMon.t/ms, GPeMon.v[0]/mV, 'r')
+    title('GPe voltage')
       
 def cortex_D1_action():
-    CortexL_D1L.w = CortexD1_start * 2 # overwriting starting weights 
+    CortexL_D1L.w = CortexD1_start * 3# overwriting starting weights 
     
     # population monitors 
     CortexPop = PopulationRateMonitor(CortexL)
@@ -262,17 +304,17 @@ def cortex_D1_action():
     
 def learn_action(): 
    # independent E/I Poisson inputs
-   p1 = PoissonGroup(10, 20*Hz)
-   p2 = PoissonGroup(10, 20*Hz)#PoissonInput(CortexNL, 'v', N=80, rate=1*Hz, weight=100)
-   p3 = PoissonGroup(10, 20*Hz)#PoissonInput(CortexWL, 'v', N=80, rate=1*Hz, weight=100)
+   p1 = PoissonGroup(10, 15*Hz)
+   p2 = PoissonGroup(10, 15*Hz)#PoissonInput(CortexNL, 'v', N=80, rate=1*Hz, weight=100)
+   p3 = PoissonGroup(10, 15*Hz)#PoissonInput(CortexWL, 'v', N=80, rate=1*Hz, weight=100)
    
    p1_CortexL = Synapses(p1,CortexL, on_pre='v+=20')
    p2_CortexNL = Synapses(p2,CortexNL, on_pre='v+=20')
    p3_CortexWL = Synapses(p3,CortexWL, on_pre='v+=20')
    
-   p1_CortexL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
-   p2_CortexNL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
-   p3_CortexWL.connect(j='k for k in range(i-w2, i+w2) if rand()<0.5', skip_if_invalid=True)
+   p1_CortexL.connect(j='k for k in range(i-n, i+n) if rand()<0.5', skip_if_invalid=True)
+   p2_CortexNL.connect(j='k for k in range(i-n, i+n) if rand()<0.5', skip_if_invalid=True)
+   p3_CortexWL.connect(j='k for k in range(i-n, i+n) if rand()<0.5', skip_if_invalid=True)
    
    #%% Record
    SNrLspikes = SpikeMonitor(SNrL)
@@ -315,7 +357,7 @@ def learn_action():
            s2 = set(high_synaptic_ind) # set object for high_synpatic ind
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-           SynapseMon.w[strengthen_synapse] +=   100000*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[strengthen_synapse] +=  50000*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
@@ -365,6 +407,13 @@ def learn_action():
    @network_operation(dt=rew_win)    
    def calculate_LTP3(t):
        complex_DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)    
+  
+   # timed array and network opperation to update DA
+   # Does cyclical DA help with action switching?
+   ta_DA = TimedArray(np.tile([0,3],np.ceil(learn_duration/second*2)),dt=1*second/2)  
+   @network_operation(dt=1*second/2)
+   def tonic_DA(t):
+       DA.I = ta_DA(t)
   
     # Population monitors     
    CortexLpop = PopulationRateMonitor(CortexL)
@@ -485,6 +534,8 @@ def test_DA():
    CortexPop = PopulationRateMonitor(CortexL)
    DApop = PopulationRateMonitor(DA)
    D1pop = PopulationRateMonitor(D1_L)
+   D1popNL = PopulationRateMonitor(D1_NL)
+   D2pop = PopulationRateMonitor(D2_L)
    GPePop = PopulationRateMonitor(GPe_L)
    SNrPop = PopulationRateMonitor(SNrL)
    SNrPopNL = PopulationRateMonitor(SNrNL)
@@ -496,8 +547,11 @@ def test_DA():
 
    DAvolts = StateMonitor(DA,('v'),record=True) 
    
-   ta_DA = TimedArray([5,0,5],dt=DA_duration)
-  
+   ta_DA = TimedArray([0,5,0],dt=DA_duration)
+   CortexL.I = 5
+   CortexNL.I = 1
+   CortexWL.I = 1
+
    @network_operation(dt=DA_duration)
    def update_sequence(t):
        DA.I = ta_DA(t)
@@ -506,6 +560,7 @@ def test_DA():
 
    figure()
    plot(DAvolts.t,DAvolts.v[0])    
+   title('DA voltage')
 
    figure()
    plot(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
@@ -520,6 +575,11 @@ def test_DA():
    print  'DA firing rate=' + np.str(np.mean(DApop.rate))
    if np.mean(DApop.rate) > 0:
       print 'Test passed... DA neurons fire' 
+      
+   if (np.mean(SNrPop.rate) < np.mean(SNrPopNL.rate)) & (np.mean(SNrPop.rate) < np.mean(SNrPopWL.rate)):
+      print 'SNr circuit seems to function during DA test'  
+   else:
+       print 'There is something funky with the SNr circuit'
 
    figure()
    plot(DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
@@ -528,21 +588,23 @@ def test_DA():
    title('DA Firing Rates')
    plt.savefig(save_root + 'DAtest_DAfiringRate.png')
    
-def test_neurons():
-    SNrMon = StateMonitor(SNrL, ('v'), record=True)
-    SNrSpikes = SpikeMonitor(SNrL, record=True)
-    SNrNLMon = StateMonitor(SNrNL, ('v'), record=True)
-    MSN_mon = StateMonitor(D1_L,('v'), record=True)
-    MSNNL_mon = StateMonitor(D1_NL,('v'), record=True)
-    CortexLmon = StateMonitor(CortexL,('v'), record=True)
-    
-    ta_CortexL = TimedArray([0,1,1],dt=MSN_SNr_duration)
-    ta_CortexNL = TimedArray([0,1,10],dt=MSN_SNr_duration)
-    
-    @network_operation(dt=MSN_SNr_duration)
-    def update_sequence(t):
-       CortexL.I = ta_CortexL(t)
-       CortexNL.I = ta_CortexNL(t)
-    
-    run(MSN_SNr_duration*3,report='text',report_period=report_time)
-    
+   figure()
+   plot(CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('Cortex Firing Rates')
+   
+   figure()
+   plot(D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(D2pop.smooth_rate(window='gaussian',width=binSize)/Hz,'--r')
+   plot(D1popNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('D1 Firing Rates')
+   
+   figure()
+   plot(STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('STN Firing Rates')
+   
