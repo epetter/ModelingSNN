@@ -410,7 +410,7 @@ def learn_action():
   
    # timed array and network opperation to update DA
    # Does cyclical DA help with action switching?
-   ta_DA = TimedArray(np.tile([0,3],np.ceil(learn_duration/second*2)),dt=1*second/2)  
+   ta_DA = TimedArray(np.tile([0,3],int(np.ceil(learn_duration/second*2))),dt=1*second/2)  
    @network_operation(dt=1*second/2)
    def tonic_DA(t):
        DA.I = ta_DA(t)
@@ -486,10 +486,15 @@ def learn_action():
    title('DA Firing Rates')
    plt.savefig(save_root + 'learnAction_DAfiringRate.png')
     
+   CortexL_smooth = CortexLpop.smooth_rate(window='gaussian',width=binSize)/Hz
+   CortexNL_smooth = CortexNLpop.smooth_rate(window='gaussian',width=binSize)/Hz
+   CortexWL_smooth = CortexWLpop.smooth_rate(window='gaussian',width=binSize)/Hz
+   mean_cortex_smooth = np.mean(np.vstack([CortexL_smooth,CortexNL_smooth,CortexWL_smooth]),axis=0)
    figure()
-   plot(CortexLpop.t/ms,CortexLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(CortexNLpop.t/ms,CortexNLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(CortexWLpop.t/ms,CortexWLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   plot(CortexLpop.t/ms,CortexL_smooth,'r')
+   plot(CortexNLpop.t/ms,CortexNL_smooth,'b')
+   plot(CortexWLpop.t/ms,CortexWL_smooth,'g')
+   plot(CortexLpop.t/ms,mean_cortex_smooth,'c--')
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('Cortex Firing Rates')
