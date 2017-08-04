@@ -26,7 +26,7 @@ SNr_collaterals = 1
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 1000*ms 
+learn_duration = 5000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -586,7 +586,7 @@ D1_SNrWL.delay = 4*ms # Humphries, et al., 2006
 D1_SNrWL.w = s #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
 
 # MSN collaterals
-D1_collateral_prob = 10/100
+D1_collateral_prob = 5/100
 D1L_NL = Synapses(D1_L,D1_NL,weightEqs,on_pre=subW)
 D1L_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
 D1L_NL.delay = 2*ms # Humphries, et al., 2006 
@@ -672,7 +672,7 @@ GPe_WL_STN.w = np.random.choice([s,p,d],len(GPe_WL_STN.i),p=[0.3,0.4,0.3]) # Hum
 ############ SNr Projections 
 
 # Thalamus
-SNr_Thalamus_prob = 12.5/n
+SNr_Thalamus_prob = 10/n
 SNrL_ThalamusL = Synapses(SNrL,ThalamusL,weightEqs,on_pre=subW)
 SNrL_ThalamusL.connect(j='k for k in range(i-n, i+n) if rand()<SNr_Thalamus_prob', skip_if_invalid=True)
 SNrL_ThalamusL.delay = 5*ms
