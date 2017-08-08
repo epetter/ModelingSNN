@@ -26,7 +26,7 @@ SNr_collaterals = 1
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 5000*ms 
+learn_duration = 100000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -78,7 +78,7 @@ alpha = 0
 #memc = 2  # Membrane capacitance
 
 # MSN plasticity
-traceTau = traceTauPost = 20*ms  # this will change integration window # was 1200
+traceTau = traceTauPost = 2*second  # this will change integration window # was 1200
 traceConstant = 0.01 # this will change maximum weight change
 tracePostConstant = -traceConstant*traceTau/traceTauPost*1.05
 
@@ -568,7 +568,7 @@ DA_D2WL.w = d#rand(len(DA_D1WL.i))
 
 ############ Striatal Projections 
 # MSN-GP
-MSN_GP = 30/n # this is the connectivity between D1-SNr and D2-GPe 
+MSN_GP = 60/n # this is the connectivity between D1-SNr and D2-GPe 
 # D1 
 D1_SNrL = Synapses(D1_L,SNrL,weightEqs,on_pre=D1_SNr)
 D1_SNrL.connect(j='k for k in range(i-n, i+n) if rand()<MSN_GP', skip_if_invalid=True)

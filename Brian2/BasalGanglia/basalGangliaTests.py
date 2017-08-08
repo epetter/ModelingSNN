@@ -357,7 +357,7 @@ def learn_action():
            s2 = set(high_synaptic_ind) # set object for high_synpatic ind
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-           SynapseMon.w[strengthen_synapse] +=  50000*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[strengthen_synapse] +=  10000*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
@@ -410,10 +410,10 @@ def learn_action():
   
    # timed array and network opperation to update DA
    # Does cyclical DA help with action switching?
-   ta_DA = TimedArray(np.tile([0,3],int(np.ceil(learn_duration/second*2))),dt=1*second/2)  
-   @network_operation(dt=1*second/2)
-   def tonic_DA(t):
-       DA.I = ta_DA(t)
+   #ta_DA = TimedArray(np.tile([0,3],int(np.ceil(learn_duration/second*2))),dt=1*second/2)  
+   #@network_operation(dt=1*second/2)
+   #def tonic_DA(t):
+   #    DA.I = ta_DA(t)
   
     # Population monitors     
    CortexLpop = PopulationRateMonitor(CortexL)
