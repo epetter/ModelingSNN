@@ -357,7 +357,7 @@ def learn_action():
            s2 = set(high_synaptic_ind) # set object for high_synpatic ind
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-           SynapseMon.w[strengthen_synapse] +=  10000*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[strengthen_synapse] +=  100*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
@@ -510,6 +510,12 @@ def learn_action():
    title('D1 Firing Rates')
    legend('R2U')   
    plt.savefig(save_root + 'learnAction_D1firingRate.png')
+   
+   figure()
+   plot(STNpop.t/ms,STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   xlabel('Time(ms)')
+   ylabel('Firing Rate')
+   title('STN Firing Rates')
    
    avg_weights = [np.mean(CortexL_D1L.w), np.mean(CortexNL_D1NL.w), np.mean(CortexWL_D1WL.w)]
    print avg_weights

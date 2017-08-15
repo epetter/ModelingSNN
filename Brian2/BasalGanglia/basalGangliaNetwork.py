@@ -26,7 +26,7 @@ SNr_collaterals = 1
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 1000000*ms 
+learn_duration = 5000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -482,7 +482,7 @@ if synfire == 1:
     #SinputWL = Synapses(Pinput, CortexWL[:group_size], on_pre='y+=weight')
     #SinputWL.connect()    
 
-Cortex_MSN_prob = 30/n
+Cortex_MSN_prob = 35/n
 CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexL_D1L.connect(j='k for k in range(i-n, i+n) if rand()<Cortex_MSN_prob', skip_if_invalid=True)
 CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
@@ -568,7 +568,7 @@ DA_D2WL.w = d#rand(len(DA_D1WL.i))
 
 ############ Striatal Projections 
 # MSN-GP
-MSN_GP = 60/n # this is the connectivity between D1-SNr and D2-GPe 
+MSN_GP = 75/n # this is the connectivity between D1-SNr and D2-GPe 
 # D1 
 D1_SNrL = Synapses(D1_L,SNrL,weightEqs,on_pre=D1_SNr)
 D1_SNrL.connect(j='k for k in range(i-n, i+n) if rand()<MSN_GP', skip_if_invalid=True)
@@ -690,7 +690,7 @@ SNrWL_ThalamusWL.w = d
 
 # Collaterals 
 if  SNr_collaterals == 1:
-    SNr_prob = 25/n # Humphries et al., 2006 uses 0.25/n... n is less than 100 though 
+    SNr_prob = 20/n # Humphries et al., 2006 uses 0.25/n... n is less than 100 though 
     SNrL_SNrL = Synapses(SNrL,SNrL,weightEqs,on_pre=subW)
     SNrL_SNrL.connect(j='k for k in range(i-n, i+n) if rand()<SNr_prob', skip_if_invalid=True)
     SNrL_SNrL.delay = 1*ms # Humphries, et al., 2006
@@ -738,21 +738,21 @@ if  SNr_collaterals == 1:
 
 ############ STN Projections 
 # STN to SNr
-STN_SNr_prob = 85/n
+STN_SNr_prob = 25/n
 STN_SNrL = Synapses(STN,SNrL,weightEqs,on_pre=addW)
 STN_SNrL.connect(j='k for k in range(i-n, i+n) if rand()<STN_SNr_prob', skip_if_invalid=True)
 STN_SNrL.delay = 1.5*ms # Humphries, et al., 2006 
-STN_SNrL.w = p
+STN_SNrL.w = s*3
 
 STN_SNrNL = Synapses(STN,SNrNL,weightEqs,on_pre=addW)
 STN_SNrNL.connect(j='k for k in range(i-n, i+n) if rand()<STN_SNr_prob', skip_if_invalid=True)
 STN_SNrNL.delay = 1.5*ms # Humphries, et al., 2006 
-STN_SNrNL.w = p
+STN_SNrNL.w = s*3
 
 STN_SNrWL = Synapses(STN,SNrWL,weightEqs,on_pre=addW)
 STN_SNrWL.connect(j='k for k in range(i-n, i+n) if rand()<STN_SNr_prob', skip_if_invalid=True)
 STN_SNrWL.delay = 1.5*ms # Humphries, et al., 2006 
-STN_SNrWL.w = p
+STN_SNrWL.w = s*3
 
 # Excitatory STN to GPe
 STN_GPe_prob = 60/n
