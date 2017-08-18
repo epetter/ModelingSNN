@@ -21,12 +21,13 @@ start_scope()
 # options
 synfire = 0
 SNr_collaterals = 1
+inh_plasticity = 1 # whether or not to implement anti-hebian plasticity in striatal collaterals 
 
 # variables 
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 5000*ms 
+learn_duration = 500000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -65,7 +66,7 @@ weight = 4.86*mV
 
 # STDP variables
 taupre = taupost = 20*ms
-wmax = 1500 # weights can go from 0 to 1
+wmax = 50 # weights can go from 0 to 1
 Apre = 0.01
 Apost = -Apre*taupre/taupost*1.05
 
@@ -77,10 +78,16 @@ alpha = 0
 #transwdth=1.0*ms
 #memc = 2  # Membrane capacitance
 
-# MSN plasticity
-traceTau = traceTauPost = 2*second  # this will change integration window # was 1200
+# Cortex-MSN plasticity
+traceTau = traceTauPost = 1*second  # this will change integration window 
 traceConstant = 0.01 # this will change maximum weight change
 tracePostConstant = -traceConstant*traceTau/traceTauPost*1.05
+
+# MSN collateral plasticity
+traceTauMSN = traceTauPostMSN = 20*ms  # this will change integration window # was 1200
+traceConstantMSN = 0.01 # this will change maximum weight change
+tracePostConstantMSN = -traceConstantMSN*traceTauMSN/traceTauPostMSN*1.05
+
 
 # Starting Weights... Different weights based upon synaptic distributions Humphries, et al., 2006 
 s = 4 # Somatic 
@@ -282,17 +289,38 @@ DAstdp = '''
              dtraceCon/dt = -traceCon/traceTau : 1 (event-driven)
              dtraceConPost/dt = -traceConPost/traceTauPost : 1 (event-driven)
              '''   
-onpreDA_D1='''
+onpreDA_D1 = '''
              v_post += w
              traceCon += traceConstant
              '''                                              
-onpostDA='''
+onpostDA = '''
              traceConPost += tracePostConstant 
-         '''
-onpreDA_D2='''
+             '''
+onpreDA_D2 = '''
              v_post -= w
              traceCon += traceConstant
              '''            
+             
+# Striatal plasticity. similar to Murray and Escola., 2017
+stdp_inh = '''
+             w : 1
+             dtraceConMSN/dt = -traceConMSN/traceTauMSN : 1 (event-driven)
+             dtraceConPostMSN/dt = -traceConPostMSN/traceTauPostMSN : 1 (event-driven)
+             '''
+             
+onpre_inh = '''     
+             v_post -= w
+             traceConMSN += traceConstantMSN   
+             w = clip(w-traceConPostMSN, 0, wmax)
+            '''
+
+onpost_inh = '''
+             traceConPostMSN += tracePostConstantMSN 
+             w = clip(w-traceConMSN, 0, wmax) 
+             '''
+             
+       
+            
 #%% Neuron Groups   
 if synfire == 1:
    n_groups = 10
@@ -573,49 +601,83 @@ MSN_GP = 75/n # this is the connectivity between D1-SNr and D2-GPe
 D1_SNrL = Synapses(D1_L,SNrL,weightEqs,on_pre=D1_SNr)
 D1_SNrL.connect(j='k for k in range(i-n, i+n) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+D1_SNrL.w = s*4# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
 
 D1_SNrNL = Synapses(D1_NL,SNrNL,weightEqs,on_pre=D1_SNr)
 D1_SNrNL.connect(j='k for k in range(i-n, i+n) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrNL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrNL.w = s #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrNL.i))
+D1_SNrNL.w = s*4 #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrNL.i))
 
 D1_SNrWL = Synapses(D1_WL,SNrWL,weightEqs,on_pre=D1_SNr)
 D1_SNrWL.connect(j='k for k in range(i-n, i+n) if rand()<MSN_GP', skip_if_invalid=True)
 D1_SNrWL.delay = 4*ms # Humphries, et al., 2006 
-D1_SNrWL.w = s #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
+D1_SNrWL.w = s*4 #* convergance_scale # Humphries, et al., 2006  #rand(len(D1_SNrWL.i))
 
 # MSN collaterals
-D1_collateral_prob = 5/100
-D1L_NL = Synapses(D1_L,D1_NL,weightEqs,on_pre=subW)
-D1L_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
-D1L_NL.delay = 2*ms # Humphries, et al., 2006 
-D1L_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+D1_collateral_prob = 15/100
 
-D1L_WL = Synapses(D1_L,D1_WL,weightEqs,on_pre=subW)
-D1L_WL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
-D1L_WL.delay = 2*ms # Humphries, et al., 2006 
-D1L_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+if inh_plasticity == 1:
+    D1L_NL = Synapses(D1_L,D1_NL,stdp_inh,on_pre=onpre_inh,on_post=onpost_inh)
+    D1L_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1L_NL.delay = 2*ms # Humphries, et al., 2006 
+    D1L_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1L_WL = Synapses(D1_L,D1_WL,stdp_inh,on_pre=onpre_inh,on_post=onpost_inh)
+    D1L_WL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1L_WL.delay = 2*ms # Humphries, et al., 2006 
+    D1L_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1NL_L = Synapses(D1_NL,D1_L,stdp_inh,on_pre=onpre_inh,on_post=onpost_inh)
+    D1NL_L.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1NL_L.delay = 2*ms # Humphries, et al., 2006 
+    D1NL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1NL_WL = Synapses(D1_NL,D1_WL,stdp_inh,on_pre=onpre_inh,on_post=onpost_inh)
+    D1NL_WL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1NL_WL.delay = 2*ms # Humphries, et al., 2006 
+    D1NL_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1WL_L = Synapses(D1_WL,D1_L,stdp_inh,on_pre=onpre_inh,on_post=onpost_inh)
+    D1WL_L.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1WL_L.delay = 2*ms # Humphries, et al., 2006 
+    D1WL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1WL_NL = Synapses(D1_WL,D1_NL,stdp_inh,on_pre=onpre_inh,on_post=onpost_inh)
+    D1WL_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1WL_NL.delay = 2*ms # Humphries, et al., 2006 
+    D1WL_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+else:
+    D1L_NL = Synapses(D1_L,D1_NL,weightEqs,on_pre=subW)
+    D1L_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1L_NL.delay = 2*ms # Humphries, et al., 2006 
+    D1L_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1L_WL = Synapses(D1_L,D1_WL,weightEqs,on_pre=subW)
+    D1L_WL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1L_WL.delay = 2*ms # Humphries, et al., 2006 
+    D1L_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1NL_L = Synapses(D1_NL,D1_L,weightEqs,on_pre=subW)
+    D1NL_L.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1NL_L.delay = 2*ms # Humphries, et al., 2006 
+    D1NL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1NL_WL = Synapses(D1_NL,D1_WL,weightEqs,on_pre=subW)
+    D1NL_WL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1NL_WL.delay = 2*ms # Humphries, et al., 2006 
+    D1NL_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1WL_L = Synapses(D1_WL,D1_L,weightEqs,on_pre=subW)
+    D1WL_L.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1WL_L.delay = 2*ms # Humphries, et al., 2006 
+    D1WL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
+    
+    D1WL_NL = Synapses(D1_WL,D1_NL,weightEqs,on_pre=subW)
+    D1WL_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
+    D1WL_NL.delay = 2*ms # Humphries, et al., 2006 
+    D1WL_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
 
-D1NL_L = Synapses(D1_NL,D1_L,weightEqs,on_pre=subW)
-D1NL_L.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
-D1NL_L.delay = 2*ms # Humphries, et al., 2006 
-D1NL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
-
-D1NL_WL = Synapses(D1_NL,D1_WL,weightEqs,on_pre=subW)
-D1NL_WL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
-D1NL_WL.delay = 2*ms # Humphries, et al., 2006 
-D1NL_WL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
-
-D1WL_L = Synapses(D1_WL,D1_L,weightEqs,on_pre=subW)
-D1WL_L.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
-D1WL_L.delay = 2*ms # Humphries, et al., 2006 
-D1WL_L.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
-
-D1WL_NL = Synapses(D1_WL,D1_NL,weightEqs,on_pre=subW)
-D1WL_NL.connect(j='k for k in range(i-n, i+n) if rand()<D1_collateral_prob', skip_if_invalid=True)
-D1WL_NL.delay = 2*ms # Humphries, et al., 2006 
-D1WL_NL.w = s# Humphries, et al., 2006  #rand(len(D1_SNrL.i))
 
 # D2 
 D2_L_GPe_L = Synapses(D2_L,GPe_L,weightEqs,on_pre=subW)
@@ -690,7 +752,7 @@ SNrWL_ThalamusWL.w = d
 
 # Collaterals 
 if  SNr_collaterals == 1:
-    SNr_prob = 20/n # Humphries et al., 2006 uses 0.25/n... n is less than 100 though 
+    SNr_prob = 15/n # Humphries et al., 2006 uses 0.25/n... n is less than 100 though 
     SNrL_SNrL = Synapses(SNrL,SNrL,weightEqs,on_pre=subW)
     SNrL_SNrL.connect(j='k for k in range(i-n, i+n) if rand()<SNr_prob', skip_if_invalid=True)
     SNrL_SNrL.delay = 1*ms # Humphries, et al., 2006

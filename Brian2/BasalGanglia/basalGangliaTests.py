@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, 'C:\Users\elijah\Documents\GitHub\ModelingSNN\Brian2\BasalGanglia')
 from basalGangliaNetwork import *
+from BrianUtils import spike_covariance 
 
 #%% Run and analyze
 
@@ -242,9 +243,9 @@ def cortex_D1_action():
     SNrPopNL = PopulationRateMonitor(SNrNL)
     SNrPopWL = PopulationRateMonitor(SNrWL)
     
-    CortexL.I = 3
-    CortexNL.I = 3
-    CortexWL.I = 3
+    CortexL.I = 2
+    CortexNL.I = 2
+    CortexWL.I = 2
     run(cortex_D1_duration,report='text',report_period=report_time)
     
    # print STN.u 
@@ -357,7 +358,7 @@ def learn_action():
            s2 = set(high_synaptic_ind) # set object for high_synpatic ind
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
-           SynapseMon.w[strengthen_synapse] +=  100*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+           SynapseMon.w[strengthen_synapse] +=  10*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
@@ -524,6 +525,26 @@ def learn_action():
       print 'Learn action test passed'
    else:
           print 'Learn action test FAILED!!'
+          
+          
+   a,b = spike_covariance(SNrL=SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,
+                 SNrNL=SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,
+                 SNrWL=SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,
+                 STN=STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,
+                 D1Lpop=D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz)
+   
+   figure()
+   title('Firing Rate interactions')              
+   plt.plot(np.transpose(b)) 
+   
+   figure()
+   title('Change in MSN collateral weights')
+   plot(D1L_NL.w)
+   
+   figure()
+   title('Change in Cortex MSN weights')
+   plot(CortexL_D1L.w)
+   
    
 
 def test_synfire():
@@ -559,7 +580,7 @@ def test_DA():
    DAvolts = StateMonitor(DA,('v'),record=True) 
    
    ta_DA = TimedArray([0,5,0],dt=DA_duration)
-   CortexL.I = 5
+   CortexL.I = 3
    CortexNL.I = 1
    CortexWL.I = 1
 
