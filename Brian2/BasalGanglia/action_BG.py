@@ -36,12 +36,12 @@ if __name__ == '__main__':
    p2 = multiprocessing.Process(name='p2',target = cortex_D1_action, args = ())
    p3 = multiprocessing.Process(name='p3',target = test_DA, args = ())
    p4 = multiprocessing.Process(name='p4',target = learn_action, args = ())
-   p5 = multiprocessing.Process(name='p5',target = learn_action, args = ())
+   #p5 = multiprocessing.Process(name='p5',target = learn_action, args = ())
    
    p0.start()
    p1.start()
    p2.start()
    p3.start()   
    p4.start()
-   p5.start()
+   #p5.start()
    

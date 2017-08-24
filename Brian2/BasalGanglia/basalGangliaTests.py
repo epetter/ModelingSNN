@@ -15,6 +15,10 @@ sys.path.insert(0, 'C:\Users\elijah\Documents\GitHub\ModelingSNN\Brian2\BasalGan
 from basalGangliaNetwork import *
 from BrianUtils import spike_covariance 
 
+
+#%% Variables
+line_width = 2
+
 #%% Run and analyze
 
 def sequence():  # reproduce figure 3 in humphries et al., 2006        
@@ -54,9 +58,9 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    run(sequence_duration*3,report='text',report_period=report_time)
    
    figure()
-   plot(SNrPopL.t/ms,SNrPopL.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   plot(SNrPopL.t/ms,SNrPopL.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('SNr Firing Rates')
@@ -64,9 +68,9 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    plt.savefig(save_root + 'SequenceTest_SNrfiringRate.png')
     
    figure()
-   plot(CortexPopL.t/ms,CortexPopL.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(CortexPopNL.t/ms,CortexPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(CortexPopWL.t/ms,CortexPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   plot(CortexPopL.t/ms,CortexPopL.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(CortexPopNL.t/ms,CortexPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(CortexPopWL.t/ms,CortexPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('Cortex Firing Rates')
@@ -74,9 +78,9 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    plt.savefig(save_root + 'SequenceTest_CortexfiringRate.png')
    
    figure() 
-   plot(D1popL.t/ms,D1popL.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(D1popNL.t/ms,D1popNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(D1popWL.t/ms,D1popWL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   plot(D1popL.t/ms,D1popL.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(D1popNL.t/ms,D1popNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(D1popWL.t/ms,D1popWL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('D1 pop firing rates')
@@ -84,7 +88,7 @@ def sequence():  # reproduce figure 3 in humphries et al., 2006
    plt.savefig(save_root + 'SequenceTest_D1firingRate.png')
    
    figure()
-   plot(DApop.t/ms, DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(DApop.t/ms, DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate (Hz)')
    title('DA firing rate')
@@ -154,13 +158,13 @@ def pop_firing(): # reproduce figure 2 in Humphries et al., 2006
    plt.savefig(save_root + 'PopTest_NucleifiringRate.png')
    
    figure()
-   plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('Cortex Firing Rates')
    
    figure() 
-   plot(D1pop.t/ms,D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(D1pop.t/ms,D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('D1 pop firing rates')
@@ -266,9 +270,9 @@ def cortex_D1_action():
     plt.savefig(save_root + 'CortexD1_SNrfiringRate.png')
     
     figure()
-    plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-    plot(CortexPopNL.t/ms,CortexPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(CortexPopWL.t/ms,CortexPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    plot(CortexPop.t/ms,CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+    plot(CortexPopNL.t/ms,CortexPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+    plot(CortexPopWL.t/ms,CortexPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
     xlabel('Time(ms)')
     ylabel('Firing Rate')
     title('Cortical Firing Rates')
@@ -276,9 +280,9 @@ def cortex_D1_action():
     plt.savefig(save_root + 'CortexD1_CortexfiringRate.png')
     
     figure()
-    plot(D1Lpop.t/ms,D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-    plot(D1NLpop.t/ms,D1NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-    plot(D1WLpop.t/ms,D1WLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+    plot(D1Lpop.t/ms,D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+    plot(D1NLpop.t/ms,D1NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+    plot(D1WLpop.t/ms,D1WLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
     xlabel('Time(ms)')
     ylabel('Firing Rate')
     title('D1 Firing Rates')
@@ -409,13 +413,6 @@ def learn_action():
    def calculate_LTP3(t):
        complex_DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)    
   
-   # timed array and network opperation to update DA
-   # Does cyclical DA help with action switching?
-   #ta_DA = TimedArray(np.tile([0,3],int(np.ceil(learn_duration/second*2))),dt=1*second/2)  
-   #@network_operation(dt=1*second/2)
-   #def tonic_DA(t):
-   #    DA.I = ta_DA(t)
-  
     # Population monitors     
    CortexLpop = PopulationRateMonitor(CortexL)
    CortexNLpop = PopulationRateMonitor(CortexNL)
@@ -448,18 +445,18 @@ def learn_action():
        SNrWL_binnedFR.append(SNrWL_FR)     
        
    figure()
-   plot(SNrL_binnedFR,'r')
-   plot(SNrNL_binnedFR,'b')
-   plot(SNrWL_binnedFR,'g')
+   plot(SNrL_binnedFR,'r', linewidth=line_width)
+   plot(SNrNL_binnedFR,'b', linewidth=line_width)
+   plot(SNrWL_binnedFR,'g', linewidth=line_width)
    plot(np.ones(len(SNrL_binnedFR))*SNr_thresh,'k--')
    legend('R2U')
    title('Online Calculation of SNr Firing rates')    
    plt.savefig(save_root + 'learnAction_SnrOnlinefiringRate.png')
    
    figure()
-   plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   plot(SNrPop.t/ms,SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(SNrPopNL.t/ms,SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(SNrPopWL.t/ms,SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('SNr Firing Rates')
@@ -467,9 +464,9 @@ def learn_action():
    plt.savefig(save_root + 'learnAction_SNrfiringRate.png')
    
    figure()
-   plot(SNrPop.t/ms,SNrPop.rate/Hz,'r')
-   plot(SNrPopNL.t/ms,SNrPopNL.rate/Hz,'b')
-   plot(SNrPopWL.t/ms,SNrPopWL.rate/Hz,'g')
+   plot(SNrPop.t/ms,SNrPop.rate/Hz,'r', linewidth=line_width)
+   plot(SNrPopNL.t/ms,SNrPopNL.rate/Hz,'b', linewidth=line_width)
+   plot(SNrPopWL.t/ms,SNrPopWL.rate/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('SNr Firing Rates')
@@ -481,7 +478,7 @@ def learn_action():
    print np.str(np.sum(np.less(SNrWL_binnedFR, SNr_thresh))) + '...unrewared action'
    
    figure()
-   plot(DApop.t/ms,DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(DApop.t/ms,DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('DA Firing Rates')
@@ -492,10 +489,10 @@ def learn_action():
    CortexWL_smooth = CortexWLpop.smooth_rate(window='gaussian',width=binSize)/Hz
    mean_cortex_smooth = np.mean(np.vstack([CortexL_smooth,CortexNL_smooth,CortexWL_smooth]),axis=0)
    figure()
-   plot(CortexLpop.t/ms,CortexL_smooth,'r')
-   plot(CortexNLpop.t/ms,CortexNL_smooth,'b')
-   plot(CortexWLpop.t/ms,CortexWL_smooth,'g')
-   plot(CortexLpop.t/ms,mean_cortex_smooth,'c--')
+   plot(CortexLpop.t/ms,CortexL_smooth,'r', linewidth=line_width)
+   plot(CortexNLpop.t/ms,CortexNL_smooth,'b', linewidth=line_width)
+   plot(CortexWLpop.t/ms,CortexWL_smooth,'g', linewidth=line_width)
+   plot(CortexLpop.t/ms,mean_cortex_smooth,'c--', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('Cortex Firing Rates')
@@ -503,9 +500,9 @@ def learn_action():
    plt.savefig(save_root + 'learnAction_CortexfiringRate.png')
   
    figure()
-   plot(D1Lpop.t/ms,D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(D1NLpop.t/ms,D1NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(D1WLpop.t/ms,D1WLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   plot(D1Lpop.t/ms,D1Lpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(D1NLpop.t/ms,D1NLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(D1WLpop.t/ms,D1WLpop.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('D1 Firing Rates')
@@ -513,7 +510,7 @@ def learn_action():
    plt.savefig(save_root + 'learnAction_D1firingRate.png')
    
    figure()
-   plot(STNpop.t/ms,STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(STNpop.t/ms,STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('STN Firing Rates')
@@ -535,18 +532,24 @@ def learn_action():
    
    figure()
    title('Firing Rate interactions')              
-   plt.plot(np.transpose(b)) 
-   
+   plot(np.transpose(b),linewidth=2) 
+   xlabel('Time')
+   plt.savefig(save_root + 'learnaction_FiringRateInteractions')
+  
    figure()
    title('Change in MSN collateral weights')
-   plot(D1L_NL.w)
+   plot(D1L_NL.w, linewidth=line_width)
+   xlabel('synapse number')
+   ylabel('weight (AU)')
+   plt.savefig(save_root + 'learnaction_ChangeInMSNweights')
    
    figure()
    title('Change in Cortex MSN weights')
-   plot(CortexL_D1L.w)
+   plot(CortexL_D1L.w, linewidth=line_width)
+   xlabel('synapse number')
+   ylabel('weight (AU)')
+   plt.savefig(save_root + 'learnaction_ChangeInCortexMSNweights')
    
-   
-
 def test_synfire():
     Mgp = SpikeMonitor(CortexL) 
     CortexL.I = 0
@@ -567,6 +570,7 @@ def test_DA():
    DApop = PopulationRateMonitor(DA)
    D1pop = PopulationRateMonitor(D1_L)
    D1popNL = PopulationRateMonitor(D1_NL)
+   D1popWL = PopulationRateMonitor(D1_WL)
    D2pop = PopulationRateMonitor(D2_L)
    GPePop = PopulationRateMonitor(GPe_L)
    SNrPop = PopulationRateMonitor(SNrL)
@@ -595,9 +599,9 @@ def test_DA():
    title('DA voltage')
 
    figure()
-   plot(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
-   plot(SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g')
+   plot(SNrPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(SNrPopNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(SNrPopWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('SNr Firing Rates')
@@ -614,28 +618,29 @@ def test_DA():
        print 'There is something funky with the SNr circuit'
 
    figure()
-   plot(DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(DApop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('DA Firing Rates')
    plt.savefig(save_root + 'DAtest_DAfiringRate.png')
    
    figure()
-   plot(CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(CortexPop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('Cortex Firing Rates')
+   plt.savefig(save_root, 'DAtest_CortexFiringRate')
    
    figure()
-   plot(D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
-   plot(D2pop.smooth_rate(window='gaussian',width=binSize)/Hz,'--r')
-   plot(D1popNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b')
+   plot(D1pop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   plot(D1popNL.smooth_rate(window='gaussian',width=binSize)/Hz,'b', linewidth=line_width)
+   plot(D1popWL.smooth_rate(window='gaussian',width=binSize)/Hz,'g', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('D1 Firing Rates')
    
    figure()
-   plot(STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r')
+   plot(STNpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
    xlabel('Time(ms)')
    ylabel('Firing Rate')
    title('STN Firing Rates')

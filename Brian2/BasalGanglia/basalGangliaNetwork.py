@@ -27,7 +27,7 @@ inh_plasticity = 1 # whether or not to implement anti-hebian plasticity in stria
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 500000*ms 
+learn_duration = 1500000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -510,7 +510,7 @@ if synfire == 1:
     #SinputWL = Synapses(Pinput, CortexWL[:group_size], on_pre='y+=weight')
     #SinputWL.connect()    
 
-Cortex_MSN_prob = 35/n
+Cortex_MSN_prob = 40/n
 CortexL_D1L = Synapses(CortexL,D1_L,MSNstdp,on_pre=MSNpre,on_post=MSNpost) #on_pre='v=+10')
 CortexL_D1L.connect(j='k for k in range(i-n, i+n) if rand()<Cortex_MSN_prob', skip_if_invalid=True)
 CortexL_D1L.delay = 10*ms # Humphries, et al., 2006 
