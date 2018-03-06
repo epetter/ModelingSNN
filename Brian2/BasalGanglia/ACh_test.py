@@ -118,13 +118,13 @@ def calculate_LTP(t):
 
 
 # Run the sequence 
-ACh.I = 20
+ACh.I = 0
 Cortex.I = 10
 MSN.I = 10
 run(1000*ms,report='text')
-ACh.I = -20
-run(1000*ms, report='text')
 ACh.I = -100
+run(1000*ms, report='text')
+ACh.I = 0
 run(1000*ms, report='text')          
           
 figure()
