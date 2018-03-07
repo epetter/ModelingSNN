@@ -27,7 +27,7 @@ inh_plasticity = 1 # whether or not to implement anti-hebian plasticity in stria
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 1500000*ms 
+learn_duration = 1000*ms #1500000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -58,6 +58,12 @@ c2 = -66
 b2= 0.2
 a2 = 0.1
 d2 = 2  
+
+# ACh interneuron
+c_ACh = -60
+b_ACh = 0.25
+a_ACh = 0.02
+d_ACh = 0.05 
 
 # cortical
 taum = 5*ms
@@ -159,6 +165,11 @@ du/dt = a2*(b2*v-u)/ms : 1
 I : 1
 ''' 
 
+ACh_eqs = '''
+dv/dt = ((0.04)*v**2+(5)*v+140-u+I)/ms : 1
+du/dt = a_ACh*(b_ACh*v-u)/ms : 1
+I : 1
+''' 
 GPeEqs=''' # Mandali et al., 2015
 dv/dt = ((0.04)*v**2+(5)*v+140-u+I)/ms : 1
 du/dt = GPe_a*(GPe_b*v-u)/ms : 1 
@@ -210,6 +221,11 @@ reset3='''
 v=c2
 u += d2
 '''
+
+ACh_reset='''
+v=c_ACh
+u += d_ACh
+''' 
 
 GPeReset='''
 v=GPe_c
@@ -300,6 +316,20 @@ onpreDA_D2 = '''
              v_post -= w
              traceCon += traceConstant
              '''            
+
+# ACh plasticity
+
+ACh_stdp = '''
+             w : 1
+             dtraceCon/dt = -traceCon/traceTau : 1 (event-driven)
+             dtraceConPost/dt = -traceConPost/traceTauPost : 1 (event-driven)
+             '''   
+onpre_ACh = '''
+             traceCon += traceConstant
+             '''                                              
+onpost_ACh = '''
+             traceConPost += tracePostConstant 
+             '''
              
 # Striatal plasticity. similar to Murray and Escola., 2017
 stdp_inh = '''
@@ -375,6 +405,14 @@ elif synfire == 1:
                                  np.random.randn(85)*1*ms + 50*ms)                       
                              
 ############ Striatal Neurons  
+
+# ACh
+ACh = NeuronGroup(10, model=ACh_eqs, threshold='v>30', reset=ACh_reset, method='euler')
+
+ACh.v = c_ACh
+ACh.u = b_ACh*c_ACh
+ACh.I = 0                             
+                             
 # D1 
 D1_L = NeuronGroup(n*striatum_scale,MSNeqs,threshold='v>40',reset=MSNreset,method='euler')
 
@@ -484,6 +522,14 @@ ThalamusWL.u = b0*c0
 ThalamusWL.I = 0
 
 #%% Synapses
+
+
+############ ACh Projections
+ACh_striatum_prob = 1/10
+ACh_striatum = Synapses(ACh, D1_L, ACh_stdp, on_pre=onpre_ACh, on_post=onpost_ACh) #on_pre='v=+10')
+ACh_striatum.connect(j='k for k in range(i-n, i+n) if rand()<ACh_striatum_prob', skip_if_invalid=True)
+ACh_striatum.delay = 10*ms 
+ACh_striatum.w = 5 
 
 ############ Cortical Projections 
 # synfire connections 

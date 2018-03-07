@@ -322,6 +322,7 @@ def learn_action():
    p3_CortexWL.connect(j='k for k in range(i-n, i+n) if rand()<0.5', skip_if_invalid=True)
    
    #%% Record
+   AChSpikes = SpikeMonitor(ACh)
    SNrLspikes = SpikeMonitor(SNrL)
    SNrNLspikes = SpikeMonitor(SNrNL)
    SNrWLspikes = SpikeMonitor(SNrWL)
@@ -384,6 +385,23 @@ def learn_action():
            SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)        
 
+   def ACh_plasticity(t,window,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
+       AChind = np.where(SpikeMon2.t > (t - window)) 
+       if len(AChind[0]) > 5: # was DA released?
+          CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
+          PresynapticInd = []
+          for i in range(0,len(np.unique(CortexIndex))):
+              pre = np.where(SynapseMon.i == np.unique(CortexIndex)[i]-1)
+              PresynapticInd.extend(pre[0])
+          MSN_High = SpikeMon3.i    
+          act_MSN = np.where(SpikeMon3 > MSN_High) # find MSNs that are in a "high" state
+          high_synaptic_ind = np.concatenate([np.where(SynapseMon.j == x)[0] for x in act_MSN[0]]) # synaptic indicies projecting to high-state MSNs
+          s2 = set(high_synaptic_ind) # set object for high_synpatic ind
+          strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
+          SynapseMon.w[strengthen_synapse] -=  (SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
+          SynapseMon.w = clip(SynapseMon.w, 0, wmax)
+
+
 #network operations     
    rew_win=10*ms        
    @network_operation(dt=rew_win)
@@ -412,8 +430,13 @@ def learn_action():
    @network_operation(dt=rew_win)    
    def calculate_LTP3(t):
        complex_DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)    
+       
+   @network_operation(dt=rew_win)
+   def calculate_LTP(t):
+       ACh_plasticity(t, rew_win, CortexLspikes, AChSpikes, D1_Lspikes, CortexL_D1L, ACh_striatum)        
   
     # Population monitors     
+   AChpop = PopulationRateMonitor(ACh)
    CortexLpop = PopulationRateMonitor(CortexL)
    CortexNLpop = PopulationRateMonitor(CortexNL)
    CortexWLpop = PopulationRateMonitor(CortexWL)

@@ -1,4 +1,6 @@
 
+# EP 170316
+###############
 
 # -*- coding: utf-8 -*-
 """
@@ -9,8 +11,6 @@ Created on Tue Dec 06 10:05:50 2016
 
 ###############
 # Basal Ganglia for action selection
-# EP 170316
-###############
 
 
 #%% import and setup 
