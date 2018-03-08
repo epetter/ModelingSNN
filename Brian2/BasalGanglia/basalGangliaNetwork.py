@@ -27,7 +27,7 @@ inh_plasticity = 1 # whether or not to implement anti-hebian plasticity in stria
 report_time = 60*second # how often to report simulation status 
 pop_duration = 11000*ms # the duration to run simulations for population firing rates. This was 11 seconds in Humphries et al., 2006; 
 sequence_duration = 1500*ms # As there are three stages this will result in a 3 seconds simulation
-learn_duration = 1000*ms #1500000*ms 
+learn_duration = 200000*ms #1500000*ms 
 synfire_duration = 100*ms # a quick test to make sure the synfire chain is functioning correctly 
 cortex_D1_duration = 3000*ms # a test of whether or not I can achieve more actions just through cortical-D1 plasticity 
 DA_duration = 1000*ms # test to see if DA neurons fire
@@ -526,12 +526,23 @@ ThalamusWL.I = 0
 
 ############ ACh Projections
 ACh_striatum_prob = 1/10
-ACh_striatum = Synapses(ACh, D1_L, ACh_stdp, on_pre=onpre_ACh, on_post=onpost_ACh) #on_pre='v=+10')
-ACh_striatum.connect(j='k for k in range(i-n, i+n) if rand()<ACh_striatum_prob', skip_if_invalid=True)
-ACh_striatum.delay = 10*ms 
-ACh_striatum.w = 5 
+ACh_D1L = Synapses(ACh, D1_L, ACh_stdp, on_pre=onpre_ACh, on_post=onpost_ACh) #on_pre='v=+10')
+ACh_D1L.connect(j='k for k in range(i-n, i+n) if rand()<ACh_striatum_prob', skip_if_invalid=True)
+ACh_D1L.delay = 10*ms 
+ACh_D1L.w = 5 
+
+ACh_D1NL = Synapses(ACh, D1_NL, ACh_stdp, on_pre=onpre_ACh, on_post=onpost_ACh) #on_pre='v=+10')
+ACh_D1NL.connect(j='k for k in range(i-n, i+n) if rand()<ACh_striatum_prob', skip_if_invalid=True)
+ACh_D1NL.delay = 10*ms 
+ACh_D1NL.w = 5 
+
+ACh_D1WL = Synapses(ACh, D1_WL, ACh_stdp, on_pre=onpre_ACh, on_post=onpost_ACh) #on_pre='v=+10')
+ACh_D1WL.connect(j='k for k in range(i-n, i+n) if rand()<ACh_striatum_prob', skip_if_invalid=True)
+ACh_D1WL.delay = 10*ms 
+ACh_D1WL.w = 5 
 
 ############ Cortical Projections 
+
 # synfire connections 
 if synfire == 1:
     CortexL_CortexL = Synapses(CortexL, CortexL, on_pre='y+=weight')
@@ -607,6 +618,14 @@ CortexWL_STN.delay = 2.5*ms # Humphries, et al., 2006
 CortexWL_STN.w = d
 
 ############ DopaminergicProjections 
+
+# DA to ACh projections
+DA_ACh_prob = 1/10
+DA_ACh = Synapses(DA, ACh, DAstdp, on_pre=onpreDA_D2, on_post=onpostDA)
+DA_ACh.connect(j='k for k in range(i-n, i+n) if rand()<DA_ACh_prob', skip_if_invalid=True) 
+DA_ACh.delay = 5*ms
+DA_ACh.w = d
+
 # DA projections to D1
 DA_MSN_prob = 30/n
 DA_D1L = Synapses(DA,D1_L,DAstdp,on_pre=onpreDA_D1,on_post=onpostDA)
@@ -880,6 +899,26 @@ STN_GPe_WL.delay = 2*ms # Humphries, et al., 2006
 STN_GPe_WL.w = p # Humphries, et al., 2006... 
 
 ############ Thalamus Projections 
+
+# Thalamus ACh
+Thal_ACh_prob = 3/n
+ThalL_ACh = Synapses(ThalamusL, ACh, weightEqs, on_pre=addW)
+ThalL_ACh.connect(j='k for k in range(i-n, i+n) if rand()<Thal_ACh_prob', skip_if_invalid=True) #connect(i=[0,1,2],j=[0,1,2])# j='k for k in range(i-n, i+n) if rand()<0.33', skip_if_invalid=True)
+ThalL_ACh.delay = 5L*ms 
+ThalL_ACh.w = d
+
+ThalNL_ACh = Synapses(ThalamusNL, ACh, weightEqs, on_pre=addW)
+ThalNL_ACh.connect(j='k for k in range(i-n, i+n) if rand()<Thal_ACh_prob', skip_if_invalid=True) #connect(i=[0,1,2],j=[0,1,2])# j='k for k in range(i-n, i+n) if rand()<0.33', skip_if_invalid=True)
+ThalNL_ACh.delay = 5*ms 
+ThalNL_ACh.w = d
+
+ThalWL_ACh = Synapses(ThalamusWL, ACh, weightEqs, on_pre=addW)
+ThalWL_ACh.connect(j='k for k in range(i-n, i+n) if rand()<Thal_ACh_prob', skip_if_invalid=True) #connect(i=[0,1,2],j=[0,1,2])# j='k for k in range(i-n, i+n) if rand()<0.33', skip_if_invalid=True)
+ThalWL_ACh.delay = 5*ms 
+ThalWL_ACh.w = d
+
+
+# Thalamus cortex
 Thal_Cortex_prob = 12.5/n
 ThalCortexL = Synapses(ThalamusL,CortexL,weightEqs,on_pre=addW)
 ThalCortexL.connect(j='k for k in range(i-n, i+n) if rand()<Thal_Cortex_prob', skip_if_invalid=True) #connect(i=[0,1,2],j=[0,1,2])# j='k for k in range(i-n, i+n) if rand()<0.33', skip_if_invalid=True)

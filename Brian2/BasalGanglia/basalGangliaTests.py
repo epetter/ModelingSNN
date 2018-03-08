@@ -364,7 +364,7 @@ def learn_action():
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
            SynapseMon.w[strengthen_synapse] +=  10*(SynapseMon.traceCon[strengthen_synapse] * mean(SynapseMon2.traceCon))     
-           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
+           #SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)
            
    def DA_LTP(t,window,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
@@ -382,12 +382,12 @@ def learn_action():
            strengthen_synapse = [val for val in PresynapticInd if val in s2] # strengthen synapses that have MSNs in up state and cortical/DA input
            not_strengthen_synapse = list(set(PresynapticInd) - set(strengthen_synapse))# weaken synapses that have glutamate but not upstate
            SynapseMon.w[strengthen_synapse] +=   1 
-           SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
+           #SynapseMon.w[not_strengthen_synapse] -= (SynapseMon.w[not_strengthen_synapse] - CortexD1_start)/np.abs(SynapseMon.w[not_strengthen_synapse]/CortexD1_start)
            SynapseMon.w = clip(SynapseMon.w, 0, wmax)        
 
    def ACh_plasticity(t,window,SpikeMon,SpikeMon2,SpikeMon3,SynapseMon,SynapseMon2):          
        AChind = np.where(SpikeMon2.t > (t - window)) 
-       if len(AChind[0]) > 5: # was DA released?
+       if len(AChind[0]) > 5: # was ACh released?
           CortexIndex = SpikeMon.i[SpikeMon.t > defaultclock.t-window]  # index of cortical neurons that fired
           PresynapticInd = []
           for i in range(0,len(np.unique(CortexIndex))):
@@ -421,19 +421,22 @@ def learn_action():
            
    @network_operation(dt=rew_win)
    def calculate_LTP(t):
-       complex_DA_LTP(t,rew_win,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L)    
+       complex_DA_LTP(t,rew_win,CortexLspikes,DASpikes,D1_Lspikes,CortexL_D1L,DA_D1L) 
+       ACh_plasticity(t, rew_win, CortexLspikes, AChSpikes, D1_Lspikes, CortexL_D1L, ACh_D1L)        
 
    @network_operation(dt=rew_win)
    def calculate_LTP2(t):
-       complex_DA_LTP(t,rew_win,CortexNLspikes,DASpikes,D1_NLspikes,CortexNL_D1NL,DA_D1NL)           
+       complex_DA_LTP(t,rew_win, CortexNLspikes, DASpikes, D1_NLspikes,CortexNL_D1NL,DA_D1NL) 
+       ACh_plasticity(t, rew_win, CortexNLspikes, AChSpikes, D1_NLspikes, CortexNL_D1NL, ACh_D1NL)           
     
    @network_operation(dt=rew_win)    
    def calculate_LTP3(t):
-       complex_DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)    
+       complex_DA_LTP(t,rew_win,CortexWLspikes,DASpikes,D1_WLspikes,CortexWL_D1WL,DA_D1WL)  
+       ACh_plasticity(t, rew_win, CortexWLspikes, AChSpikes, D1_WLspikes, CortexWL_D1WL, ACh_D1WL) 
        
-   @network_operation(dt=rew_win)
-   def calculate_LTP(t):
-       ACh_plasticity(t, rew_win, CortexLspikes, AChSpikes, D1_Lspikes, CortexL_D1L, ACh_striatum)        
+#   @network_operation(dt=rew_win)
+#   def calculate_LTP(t):
+#       ACh_plasticity(t, rew_win, CortexLspikes, AChSpikes, D1_Lspikes, CortexL_D1L, ACh_striatum)        
   
     # Population monitors     
    AChpop = PopulationRateMonitor(ACh)
@@ -466,6 +469,11 @@ def learn_action():
        SNrNL_binnedFR.append(SNrNL_FR)     
        SNrWL_FR = calculate_FR(SNrWLspikes,integration_window,i*ms)       
        SNrWL_binnedFR.append(SNrWL_FR)     
+       
+       
+   figure()
+   plot(AChpop.t/ms, AChpop.smooth_rate(window='gaussian',width=binSize)/Hz,'r', linewidth=line_width)
+   title('ACh')   
        
    figure()
    plot(SNrL_binnedFR,'r', linewidth=line_width)
