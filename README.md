@@ -1,6 +1,5 @@
 # ModelingSNN
-modeling using spiking neural networks
+modeling using spiking neural networks in Brain2
 
-each project has its own folder 
+working on biologically plausible action selection (basal ganglia)
 
-most of the modeling is done using the Brian2 softward
